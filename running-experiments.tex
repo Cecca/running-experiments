@@ -1,0 +1,145 @@
+\documentclass{llncs}
+
+\usepackage{graphicx}
+
+\begin{document}
+\title{Running experiments with confidence and sanity}
+%
+%\titlerunning{Abbreviated paper title}
+% If the paper title is too long for the running head, you can set
+% an abbreviated paper title here
+%
+\author{Matteo Ceccarello\inst{1}\orcidID{0000-0003-2783-0218} \and
+Second Author\inst{2,3}\orcidID{1111-2222-3333-4444} \and
+Third Author\inst{3}\orcidID{2222--3333-4444-5555}}
+%
+\authorrunning{M. Ceccarello}
+% First names are abbreviated in the running head.
+% If there are more than two authors, 'et al.' is used.
+%
+\institute{Free University of Bozen, Italy\\
+\email{mceccarello@unibz.it}}
+%
+\maketitle              % typeset the header of the contribution
+%
+\begin{abstract}
+Analyzing data from large experimental suites is a daily task for
+anyone doing experimental algorithmics.
+In this paper we report on several approaches we tried for this 
+seemingly mundane task, reflecting on the many errors and consequent
+mishaps.
+
+We conclude by proposing a workflow, which can be implemented using several
+tools, that allows to analyze experimental data with confidence.
+
+\keywords{Experimental algorithmics; Experimental analysis; data analysis}
+\end{abstract}
+
+There are several challenges when running large experimental suites
+for the evaluation of algorithms.
+
+\begin{itemize}
+\item Oftentime the algorithm is modified in response to the results
+  of the experimental study. It is important not to mix results from
+  different algorithms, and from different code implementations of the
+  same algorithm.
+\item Usually running the experiments takes a long time, and we don't
+  want to re-run all the experiments every time. However, when
+  re-using results from old experiments, we need to be sure that we
+  are not including undesired and obsolete results.
+\item There are two types of experiments: the ones you do during the
+  development of the code, which are useful to find out the most
+  appropriate parameter ranges, shake out bugs, check assumptions,
+  etc; The second kind of experiments is instead devoted to the
+  collection of the results of the study. This means that experiments
+  are run over a long span of time. It is very important that results
+  obtained with different code versions are not mixed.
+\item An experiment is run multiple times with the same parameter
+  configuration (including the random seed), but only the most recent
+  one is interesting.
+\item Experiments are run on a machine (or cluster of machines) and then
+  analyzed in another.
+\item There are \emph{many} experiemnts.
+\item The analysis is carried out with different tools (python, R) and
+  should run reasonably efficiently
+\end{itemize}
+
+Here follows the \emph{keys for a successful experimental evaluation}
+
+\paragraph{Manage the experimental results thoughtfully}
+
+\begin{itemize}
+\item Collect everything you need, but nothing more: it's expensive to process too
+  much data you don't need
+\item Implement a mechanism to keep track of only the latest version of an
+  experiment. This is crucial to be able to re-run parameter configurations
+  without being worried that some old results are sneaking in. You may also
+  need some mechanism to clean up old configurations (and then also some
+  mechanism to back up)
+\item Keep the analysis efficient (use tools like make)
+\item Using a database helps managing changes with database migrations.
+\end{itemize}
+
+\paragraph{Manage the experimental configurations sanely}
+
+\begin{itemize}
+\item Never run experiments from the command line, keep that for testing.
+\item Have a file describing all the experiments that will go into the paper. This
+  can be:
+  \begin{itemize}
+  \item A file in a declarative language such as YAML. The pros are that it is
+    declarative, the cons are that you have to implement the logic to use it
+    anyway.
+  \item A simple bash script might be a better option: loops are used to test
+      different combinations of parameters, and switch statements are used to
+      test experiment groups.
+  \item A third alternative is to make the code accept configuration file with all
+      the parameters to test. The problem is then that we need to implement the
+      logic to handle all these runs, which can be very cumbersome an is
+      ultimatly wasted work.
+  \end{itemize}
+\item Allow to skip rerunning parameter configurations, so to avoid continuous
+  editing of the experimental files. Ideally, you should have a way for your
+  code to telle whether an experiment has already been run, giving the option
+  to skip runinng it or to "override" the result, actually just appending the
+  new result.
+\end{itemize}
+
+\paragraph{Manage the datasets efficiently}
+
+\begin{itemize}
+\item \emph{No manual downloading and preprocessing}. At the very minimum, you want a
+  script to download and preprocess your data for you
+\item In my experience, `bash` quickly becomes very tangled, and `python` is a mess
+  to set up if you have to move on a new machine. Embedding the preprocessing
+  (and downloading) code in the experiment's code is the best way to go. You
+  get a single development environment to set up, a single entry point for the
+  experiemnts (no need to run a script to preprocess and distribute data as a
+  separate step).
+\item Maybe the datasets should be versioned?
+\item There should be a command to list all available datasets, and remove the ones
+  that are no longer needed.
+\end{itemize}
+
+\paragraph{The code}
+
+Not just from the point of view of implementation, but maybe even more
+prominently from the point of view of usage. That is to say:
+
+\begin{itemize}
+\item Keep parameters at the bare minimum. If a parameter never changes across
+  experiements, then remove it from the tunable options. That is: keep the
+  interface minimal
+\item Don't use environment variables. They seem neat and convenient, but they soon
+  go out of eyesight and you may forget that some are set to some value. It's
+  way better to have all the parameters specified as command line arguments:
+  having to repeat them every time is a good reminder to keep the interface
+  minimal.
+\item Use assertions everywhere, possibly active just during debug. This means that
+  you should have a test dataset that can run in a reasonable time in debug
+  mode. The problem is that often the problems arise when using large datasets
+  that can be handled just in release mode.
+\end{itemize}
+
+\end{document}
+
