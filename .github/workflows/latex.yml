@@ -26,4 +26,9 @@ jobs:
       uses: xu-cheng/latex-action@v2
       with:
         root_file: running-experiments.tex
+    
+    - uses: actions/upload-artifact@v2
+      with:
+        name: running-experiments.pdf
+        path: running-experiments.tex
         
