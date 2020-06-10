@@ -3,6 +3,10 @@
 \usepackage[utf8]{inputenc}
 \usepackage{todonotes}
 \usepackage{graphicx}
+\usepackage{color}
+
+\newcommand{\matodo}[1]{\todo[inline, color=green!50]{#1}}
+\newcommand{\cetodo}[1]{\todo[inline, color=orange!50]{#1}}
 
 \begin{document}
 \title{Running experiments with confidence and sanity}
@@ -41,6 +45,30 @@ tools, that allows to analyze experimental data with confidence.
 
 \keywords{Experimental algorithmics; Experimental analysis; data analysis}
 \end{abstract}
+
+\section{Introduction}
+
+\section{Related work}
+
+\section{Challenges in running large scale experimental evaluation}
+
+\section{Case study}
+
+\cetodo{Here we describe our toy project. I think it's better to describe
+it here in order to use it as a running example in the next subsections.}
+
+\section{Approaches to experimental evaluation}
+
+\subsection{Manage the datasets efficiently}
+\subsection{Manage the experimental configurations clearly}
+\subsection{Version everything}
+\subsection{Manage the experimental results thoughtfully}
+\subsection{Don't repeat yourself}
+
+
+\appendix
+
+\section{Notes}
 
 There are several challenges when running large experimental suites
 for the evaluation of algorithms.
@@ -166,8 +194,8 @@ All these components can evolve independently from one another, even within each
 (we can update just one of the many algorithms and datasets under consideration).
 These changes should be recorded, but we don't want to re-run all the experiments just because
 one dataset was updated. Rather, we would like to re-run only those experiments involving it.
-\todo[inline]{This is rather similar to \texttt{make}, so we keep re-inventing the wheel, 
-or the necessities are always the same.}.
+\cetodo{This is rather similar to \texttt{make}, so we keep re-inventing the wheel, 
+or the necessities are always the same.}
 For this purpose, using the git version of the code is not well suited to this, as it is
 shared between all the components.
 \end{document}
