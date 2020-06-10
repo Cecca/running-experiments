@@ -3,6 +3,7 @@
 \usepackage[utf8]{inputenc}
 \usepackage{todonotes}
 \usepackage{graphicx}
+\usepackage{hyperref}
 \usepackage{color}
 
 \newcommand{\matodo}[1]{\todo[inline, color=green!50]{#1}}
@@ -48,7 +49,68 @@ tools, that allows to analyze experimental data with confidence.
 
 \section{Introduction}
 
+As we shall see, the literature is mainly concerned with the design 
+and analysis of
+experiments, with the communication of the results,
+and with reproducibility.
+In this paper, instead, we report on our experience with the day to day
+tasks that have to be carried out in between those three tasks, and
+the approaches we developed to tackle the perils and frustrations of this 
+often menial work.
+
 \section{Related work}
+
+\subsection{Experimental algorithmics}
+
+McGeoch and Moret~\cite{DBLP:journals/sigact/McGeochM99} give advice on how
+to present experimental result, but don't describe how to run the experiments
+themselves.
+Sanders~\cite{DBLP:conf/dagstuhl/Sanders00} describes how to report results
+in papers.
+
+The book by McGeoch~\cite{DBLP:reference/algo/McGeoch08} describes a methodology
+for running experiments.
+
+Have a look at~\cite{DBLP:journals/jucs/MoretS01} and~\cite{DBLP:conf/dimacs/Moret99}.
+
+There is a 2010 book~\cite{DBLP:books/sp/2010BCPP}.
+
+Also read~\cite{DBLP:series/ncs/Bartz-BeielsteinP14}.
+
+From McGeoch~\cite{DBLP:journals/cacm/McGeoch07} we have a motivation for complex
+experimental analyses:
+\begin{center}
+\begin{minipage}{0.8\textwidth}
+  In addition, in the past few decades, experimental methodology in this
+  context has evolved into some-thing resembling a classic “laboratory
+  experiment” for analyzing algorithms. This approach emphasizes highly
+  controlled parameters, carefully placed data-collection probes, and
+  sophisticated data analysis.Rather than simply measure performance, the
+  goal of the experiment is to generalize away from context-specific
+  measurements and build insight into fundamental structures and properties.
+
+  Indeed, since experiments can be used to measure any aspect of
+  algorithm/program performance, not just CPU times, this approach can
+  stimulate new forms of interplay between theory and practice. The term
+  “experimental algorithmics” describes this new approach to algorithm design
+  and analysis, combining theoretical questions and motivations with
+  empirical research methods. The related term “algorithm engineering” is
+  almost synonymous but emphasizes design over analysis.
+\end{minipage}
+\end{center}
+
+There has been a Dagstuhl seminar on the topic of 
+experimental evaluation~\cite{DBLP:conf/dagstuhl/2000ea}.
+
+Demetrescu et al.~\cite{DBLP:conf/dagstuhl/DemetrescuFIN00} worked on
+the topic of visualizing experimental results in experimental algorithmics.
+
+\subsection{Reproducibility}
+
+All the works like sumatra, ReproZip, docker, that capture the environment for
+replicability.
+
+Then there are the tools for literate programming.
 
 \section{Challenges in running large scale experimental evaluation}
 
@@ -66,6 +128,9 @@ it here in order to use it as a running example in the next subsections.}
 \subsection{Don't repeat yourself}
 
 \section{Conclusions}
+
+\bibliographystyle{alpha}
+\bibliography{references}
 
 \appendix
 
