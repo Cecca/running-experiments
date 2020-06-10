@@ -1,5 +1,6 @@
 \documentclass{llncs}
 
+\usepackage{todonotes}
 \usepackage{graphicx}
 
 \begin{document}
@@ -39,7 +40,7 @@ There are several challenges when running large experimental suites
 for the evaluation of algorithms.
 
 \begin{itemize}
-\item Oftentime the algorithm is modified in response to the results
+\item Oftentimes the algorithm is modified in response to the results
   of the experimental study. It is important not to mix results from
   different algorithms, and from different code implementations of the
   same algorithm.
@@ -114,7 +115,7 @@ Here follows the \emph{keys for a successful experimental evaluation}
   to set up if you have to move on a new machine. Embedding the preprocessing
   (and downloading) code in the experiment's code is the best way to go. You
   get a single development environment to set up, a single entry point for the
-  experiemnts (no need to run a script to preprocess and distribute data as a
+  experiments (no need to run a script to preprocess and distribute data as a
   separate step).
 \item Maybe the datasets should be versioned?
 \item There should be a command to list all available datasets, and remove the ones
@@ -128,7 +129,7 @@ prominently from the point of view of usage. That is to say:
 
 \begin{itemize}
 \item Keep parameters at the bare minimum. If a parameter never changes across
-  experiements, then remove it from the tunable options. That is: keep the
+  experiments, then remove it from the tunable options. That is: keep the
   interface minimal
 \item Don't use environment variables. They seem neat and convenient, but they soon
   go out of eyesight and you may forget that some are set to some value. It's
@@ -141,5 +142,27 @@ prominently from the point of view of usage. That is to say:
   that can be handled just in release mode.
 \end{itemize}
 
+\paragraph{Version everything}
+
+Keeping the source code under version control might not be sufficient, since
+source code revisions (in isolation) lack semantic meaning: you cannot tell
+if a version is more recent than another without looking at the VCS DAG.
+Furthermore, there are several components that may need versioning in
+a project:
+\begin{itemize}
+  \item Algorithms implementation
+  \item The schemas of the database for reporting results (or the fields of 
+    the CSV files, if we don't use a database)
+  \item Datasets, for which the preprocessing might evolve in time in 
+    response to fixing bugs
+\end{itemize}
+All these components can evolve independently from one another, even within each category
+(we can update just one of the many algorithms and datasets under consideration).
+These changes should be recorded, but we don't want to re-run all the experiments just because
+one dataset was updated. Rather, we would like to re-run only those experiments involving it.
+\todo[inline]{This is rather similar to \texttt{make}, so we keep re-inventing the wheel, 
+or the necessities are always the same.}.
+For this purpose, using the git version of the code is not well suited to this, as it is
+shared between all the components.
 \end{document}
 
