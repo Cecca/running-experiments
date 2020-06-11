@@ -6,6 +6,7 @@
 #include <memory>
 #include <stdexcept>
 #include <array>
+#include <valarray>
 #include <vector>
 #include <H5Cpp.h>
 
@@ -27,6 +28,26 @@ struct DatasetConfig {
     int version;
 };
 
+// I'm using std::valarray just to be able to use the convenience of std::slice.
+// however, according to the internet, valarray is some sort of sad orphan
+// in the standard library.
+//
+// Maybe a better option is to use blitz++ or to just convert everything to
+// a vector of vectors
+class Dataset {
+    std::valarray<float> inner;
+    size_t n;
+    size_t dim;
+
+    public:
+    Dataset(std::valarray<float> inner, size_t n, size_t dim): inner(inner), n(n), dim(dim) {}
+
+    // I think there is a copy going on here, which is undesirable
+    std::valarray<float> get(size_t i) {
+        return inner[std::slice(i * dim, dim, 1)];
+    }
+};
+
 DatasetConfig dataset_path(std::string name) {
     // Make the path of the python script relative to the directory
     std::stringstream sstr;
@@ -39,8 +60,7 @@ DatasetConfig dataset_path(std::string name) {
     return config;
 }
 
-// Maybe instead of vector we can use std::valarray
-std::vector<float> load(std::string name) {
+Dataset load(std::string name) {
 
     DatasetConfig conf = dataset_path(name);
     std::stringstream sstr;
@@ -64,8 +84,8 @@ std::vector<float> load(std::string name) {
     // of vectors. The general advice is to handle 
     // indexing manually, perhaps with the help of
     // std::slice
-    std::vector<float> output(dims_out[0] * dims_out[1]);
+    std::valarray<float> output(dims_out[0] * dims_out[1]);
     dataset.read(&output[0], H5::PredType::NATIVE_FLOAT);
 
-    return output;
+    return Dataset(output, dims_out[0], dims_out[1]);
 }

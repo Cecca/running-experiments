@@ -8,8 +8,11 @@ int main(int argc, char **argv) {
   // Just a dummy call
   // record_result("test", 1, "algotest", 1, "params", 128);
   auto dataset = load("fashion-mnist-784-euclidean");
-  for (size_t i=0; i<784; i++) {
-    std::cout << dataset[i] << " ";
+  auto first = dataset.get(0);
+  size_t dim = first.size();
+  std::cout << "dimensionality is " << dim << std::endl;
+  for (size_t i=0; i<dim; i++) {
+    std::cout << first[i] << " ";
   }
   std::cout << std::endl;
 
