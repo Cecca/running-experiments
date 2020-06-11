@@ -14,7 +14,7 @@ public:
   sqlite3 *handle;
 
 public:
-  Connection(std::string spec) throw() {
+  Connection(std::string spec) noexcept(false) {
     switch (sqlite3_open(spec.c_str(), &this->handle)) {
     case SQLITE_OK:
       // OK, nop
@@ -24,7 +24,7 @@ public:
     }
   }
 
-  ~Connection() throw() {
+  ~Connection() noexcept(false) {
     switch (sqlite3_close(this->handle)) {
     case SQLITE_OK:
       std::cout << "connection freed" << std::endl;
@@ -40,7 +40,7 @@ private:
   sqlite3_stmt *handle;
 
 public:
-  Statement(Connection &conn, std::string sql_str) throw() {
+  Statement(Connection &conn, std::string sql_str) noexcept(false) {
     switch (sqlite3_prepare_v2(conn.handle, sql_str.c_str(), -1, &this->handle,
                                NULL)) {
     case SQLITE_OK:
@@ -51,7 +51,7 @@ public:
     }
   }
 
-  ~Statement() throw() {
+  ~Statement() noexcept(false) {
     switch (sqlite3_finalize(this->handle)) {
     case SQLITE_OK:
       std::cout << "statement finalized" << std::endl;
@@ -63,7 +63,7 @@ public:
   }
 
   void bind_text(const std::string &placeholder,
-                 const std::string &text) throw() {
+                 const std::string &text) noexcept(false) {
     int rc = sqlite3_bind_text(
         this->handle,
         sqlite3_bind_parameter_index(this->handle, placeholder.c_str()),
@@ -73,7 +73,7 @@ public:
     }
   }
 
-  void bind_int(const std::string &placeholder, int value) throw() {
+  void bind_int(const std::string &placeholder, int value) noexcept(false) {
     int rc = sqlite3_bind_int(
         this->handle,
         sqlite3_bind_parameter_index(this->handle, placeholder.c_str()), value);
@@ -82,7 +82,7 @@ public:
     }
   }
 
-  void bind_int64(const std::string &placeholder, uint64_t value) throw() {
+  void bind_int64(const std::string &placeholder, uint64_t value) noexcept(false) {
     int rc = sqlite3_bind_int64(
         this->handle,
         sqlite3_bind_parameter_index(this->handle, placeholder.c_str()), value);
@@ -91,7 +91,7 @@ public:
     }
   }
 
-  void bind_double(const std::string &placeholder, double value) throw() {
+  void bind_double(const std::string &placeholder, double value) noexcept(false) {
     int rc = sqlite3_bind_double(
         this->handle,
         sqlite3_bind_parameter_index(this->handle, placeholder.c_str()), value);
@@ -100,27 +100,30 @@ public:
     }
   }
 
-  void exec() throw() {
+  int read_int(int index) noexcept(false) {
+    return sqlite3_column_int(this->handle, index);
+  }
+
+  bool exec() noexcept(false) {
     switch (sqlite3_step(this->handle)) {
-    case SQLITE_DONE: // nop
-      break;
+    case SQLITE_DONE:
+      // We are done, reset the statement
+      if (sqlite3_reset(this->handle) != SQLITE_OK) {
+        throw std::runtime_error("couldn't reset the prepared statement");
+      }
+      return false;
     case SQLITE_ROW:
-      // FIXME figure out what to do with the row
-      break;
+      // there are more things to be read, we can extract information
+      return true;
     default:
       throw std::runtime_error("couldn't step the prepared statement");
-    }
-    if (sqlite3_reset(this->handle) != SQLITE_OK) {
-      throw std::runtime_error("couldn't reset the prepared statement");
     }
   }
 };
 } // namespace sqlite
 
-sqlite3 *db_connection() {
-  sqlite3 *handle;
-  sqlite3_open("file:demo-db.sqlite", &handle);
-  return handle;
+sqlite::Connection db_connection() {
+  return sqlite::Connection("file:demo-db.sqlite");
 }
 
 std::string datetime_now() {
@@ -137,56 +140,43 @@ std::string datetime_now() {
 }
 
 int db_setup() {
-  sqlite3 *handle = db_connection();
-  sqlite3_stmt *stmt_handle;
-  sqlite3_prepare_v2(handle, "PRAGMA user_version;", -1, &stmt_handle, NULL);
-  int rc = sqlite3_step(stmt_handle);
-  if (rc != SQLITE_ROW) {
-    std::cerr << "not a sqlite row" << std::endl;
-    return 1;
-  }
-  int version = sqlite3_column_int(stmt_handle, 0);
+  sqlite::Connection conn = db_connection();
+  sqlite::Statement stmt(conn, "PRAGMA user_version;");
+  stmt.exec();
+  int version = stmt.read_int(0);
   std::cout << "database version " << version << std::endl;
-  sqlite3_finalize(stmt_handle);
 
   // Apply the changes defining each version. Note that the branches of the
   // switch will fall through: so all the changes are applied in order Version 0
   // stands for the uninitialized database
-  const char *sql_str;
   switch (version + 1) {
-  case 1:
+  case 1: {
     std::cout << "applying initial schema definitions" << std::endl;
-    sql_str = "CREATE TABLE results ("
-              "  sha                 TEXT PRIMARY KEY,"
-              "  date                TEXT,"
-              "  dataset             TEXT,"
-              "  dataset_version     INT,"
-              "  algorithm           TEXT,"
-              "  algorithm_version   INT,"
-              "  parameters          TEXT,"
-              "  running_time_ms     INT64"
-              ");";
-    if (sqlite3_prepare_v2(handle, sql_str, -1, &stmt_handle, NULL) !=
-        SQLITE_OK)
-      std::cerr << "couldn't step " << sqlite3_errmsg(handle) << std::endl;
-    if (sqlite3_step(stmt_handle) != SQLITE_DONE)
-      std::cerr << "couldn't step " << sqlite3_errmsg(handle) << std::endl;
-    if (sqlite3_finalize(stmt_handle) != SQLITE_OK)
-      std::cerr << "couldn't finalize " << sqlite3_errmsg(handle) << std::endl;
+    sqlite::Statement create_table(conn,
+                                   "CREATE TABLE results ("
+                                   "  sha                 TEXT PRIMARY KEY,"
+                                   "  date                TEXT,"
+                                   "  dataset             TEXT,"
+                                   "  dataset_version     INT,"
+                                   "  algorithm           TEXT,"
+                                   "  algorithm_version   INT,"
+                                   "  parameters          TEXT,"
+                                   "  running_time_ms     INT64"
+                                   ");");
+    create_table.exec();
     // Bump version number to the one of the initialized database
-    // sqlite3_prepare_v2(handle, "PRAGMA user_version = 1", -1, &stmt_handle2,
-    // NULL); sqlite3_step(stmt_handle2); if (sqlite3_finalize(stmt_handle2) !=
-    // SQLITE_OK) std::cerr << "coludn't finalize " << sqlite3_errmsg(handle) <<
-    // std::endl;
-  case 2:
+    sqlite::Statement bump(conn, "PRAGMA user_version = 1");
+    bump.exec();
+  }
+  case 2: {
     std::cout << "results database schema up to date" << std::endl;
     break;
-  default:
+  }
+  default: {
     std::cerr << "unsupported database version " << version << std::endl;
   }
+  }
 
-  if (sqlite3_close(handle) != SQLITE_OK)
-    std::cerr << "couldn't close " << sqlite3_errmsg(handle) << std::endl;
   return 0;
 }
 
@@ -213,7 +203,7 @@ void record_result(std::string dataset, int dataset_version,
                  << algorithm_version << parameters;
   std::string sha = sha256_string(to_hash_stream.str());
 
-  sqlite::Connection conn("file:demo-db.sqlite");
+  sqlite::Connection conn = db_connection();
   sqlite::Statement stmt(
       conn,
       "INSERT INTO results"
@@ -221,7 +211,7 @@ void record_result(std::string dataset, int dataset_version,
       "   parameters, running_time_ms)"
       "VALUES (:sha, :date, :dataset, :dataset_version, :algorithm, "
       "        :algorithm_version, :parameters, :running_time_ms);");
-  
+
   stmt.bind_text(":sha", sha);
   stmt.bind_text(":date", date);
   stmt.bind_text(":dataset", dataset);
