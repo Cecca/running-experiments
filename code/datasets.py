@@ -24,14 +24,21 @@ def get_dataset_fn(dataset):
     return os.path.join('data', '%s.hdf5' % dataset)
 
 
+def disk_version(which):
+    hdf5_fn = get_dataset_fn(which)
+    if not os.path.exists(hdf5_fn):
+        return None
+    f = h5py.File(hdf5_fn)
+    return max([int(k) for k in f.keys()])
+
+
+# TODO: This is where we should put the code to cache the datasets online
 def get_dataset(which):
     hdf5_fn = get_dataset_fn(which)
-    if os.path.exists(hdf5_fn):
+    if disk_version(which) == DATASETS[which].version:
         return hdf5_fn
-    # TODO: This is where we should put the code to cache the datasets online
-    if which in DATASETS:
-        print("Creating dataset locally", file=sys.stderr)
-        DATASETS[which](hdf5_fn)
+    print("Updating dataset", which, "from version", disk_version(which), "to version", DATASETS[which].version, file=sys.stderr)
+    DATASETS[which].build(hdf5_fn)
     hdf5_f = h5py.File(hdf5_fn)
     return hdf5_fn
 
@@ -50,46 +57,58 @@ def write_output(vectors, fn, distance, version, point_type='float', count=100):
     g.create_dataset('vectors', (len(vectors), len(vectors[0])), dtype=vectors.dtype)[:] = vectors
     f.close()
 
-def gnews(out_fn): 
-    import gensim
+class GNews(object):
+    version = 1
 
-    url = 'https://s3.amazonaws.com/dl4j-distribution/GoogleNews-vectors-negative300.bin.gz'
-    fn = download(url, 'GoogleNews-vectors-negative300.bin.gz')
-    print("Loading GNews vectors", file=sys.stderr)
-    model = gensim.models.KeyedVectors.load_word2vec_format(fn, binary=True)
-    X = []
-    for word in model.vocab.keys():
-        X.append(model[word])
-    print("Writing output", file=sys.stderr)
-    write_output(numpy.array(X), out_fn, 'angular', version = 1)
+    def build(self, out_fn): 
+        import gensim
 
-def glove2m(out_fn):
-    import zipfile
-
-    url = 'http://nlp.stanford.edu/data/glove.840B.300d.zip'
-    fn = download(url, 'glove.840B.300d.zip')
-    with zipfile.ZipFile(fn) as z:
-        print('preparing %s' % out_fn, file=sys.stderr)
-        z_fn = 'glove.840B.300d.txt'
+        url = 'https://s3.amazonaws.com/dl4j-distribution/GoogleNews-vectors-negative300.bin.gz'
+        fn = download(url, 'GoogleNews-vectors-negative300.bin.gz')
+        print("Loading GNews vectors", file=sys.stderr)
+        model = gensim.models.KeyedVectors.load_word2vec_format(fn, binary=True)
         X = []
-        for line in z.open(z_fn):
-            v = [float(x) for x in line.strip().split()[1:]]
-            X.append(numpy.array(v))
-        write_output(numpy.array(X), out_fn, 'angular', version = 1)
+        for word in model.vocab.keys():
+            X.append(model[word])
+        print("Writing output", file=sys.stderr)
+        write_output(numpy.array(X), out_fn, 'angular', self.version)
 
-def glove(out_fn, d):
-    import zipfile
+class Glove2m(object):
+    version = 1
 
-    url = 'http://nlp.stanford.edu/data/glove.twitter.27B.zip'
-    fn = download(url, 'glove.twitter.27B.zip')
-    with zipfile.ZipFile(fn) as z:
-        print('preparing %s' % out_fn, file=sys.stderr)
-        z_fn = 'glove.twitter.27B.%dd.txt' % d
-        X = []
-        for line in z.open(z_fn):
-            v = [float(x) for x in line.strip().split()[1:]]
-            X.append(numpy.array(v))
-        write_output(numpy.array(X), out_fn, 'angular', version = 1)
+    def build(self, out_fn):
+        import zipfile
+
+        url = 'http://nlp.stanford.edu/data/glove.840B.300d.zip'
+        fn = download(url, 'glove.840B.300d.zip')
+        with zipfile.ZipFile(fn) as z:
+            print('preparing %s' % out_fn, file=sys.stderr)
+            z_fn = 'glove.840B.300d.txt'
+            X = []
+            for line in z.open(z_fn):
+                v = [float(x) for x in line.strip().split()[1:]]
+                X.append(numpy.array(v))
+            write_output(numpy.array(X), out_fn, 'angular', self.version)
+
+class Glove(object):
+    version = 1
+
+    def __init__(self, d):
+        self.d = d
+
+    def build(self, out_fn):
+        import zipfile
+
+        url = 'http://nlp.stanford.edu/data/glove.twitter.27B.zip'
+        fn = download(url, 'glove.twitter.27B.zip')
+        with zipfile.ZipFile(fn) as z:
+            print('preparing %s' % out_fn, file=sys.stderr)
+            z_fn = 'glove.twitter.27B.%dd.txt' % self.d
+            X = []
+            for line in z.open(z_fn):
+                v = [float(x) for x in line.strip().split()[1:]]
+                X.append(numpy.array(v))
+            write_output(numpy.array(X), out_fn, 'angular', self.version)
 
 
 def _load_texmex_vectors(f, n, k):
@@ -113,26 +132,31 @@ def _get_irisa_matrix(t, fn):
     return _load_texmex_vectors(f, n, k)
 
 
-def sift(out_fn):
-    import tarfile
+class SIFT(object):
+    version = 1
 
-    url = 'ftp://ftp.irisa.fr/local/texmex/corpus/sift.tar.gz'
-    fn = download(url, 'sift.tar.tz')
-    with tarfile.open(fn, 'r:gz') as t:
-        train = _get_irisa_matrix(t, 'sift/sift_base.fvecs')
-        # test = _get_irisa_matrix(t, 'sift/sift_query.fvecs')
-        write_output(train, out_fn, 'euclidean', version = 1)
+    def build(self, out_fn):
+        import tarfile
 
+        url = 'ftp://ftp.irisa.fr/local/texmex/corpus/sift.tar.gz'
+        fn = download(url, 'sift.tar.tz')
+        with tarfile.open(fn, 'r:gz') as t:
+            train = _get_irisa_matrix(t, 'sift/sift_base.fvecs')
+            # test = _get_irisa_matrix(t, 'sift/sift_query.fvecs')
+            write_output(train, out_fn, 'euclidean', self.version)
 
-def gist(out_fn):
-    import tarfile
+class Gist(object):
+    version = 1
 
-    url = 'ftp://ftp.irisa.fr/local/texmex/corpus/gist.tar.gz'
-    fn = download(url, 'gist.tar.tz')
-    with tarfile.open(fn, 'r:gz') as t:
-        train = _get_irisa_matrix(t, 'gist/gist_base.fvecs')
-        # test = _get_irisa_matrix(t, 'gist/gist_query.fvecs')
-        write_output(train, out_fn, 'euclidean', version = 1)
+    def build(self, out_fn):
+        import tarfile
+
+        url = 'ftp://ftp.irisa.fr/local/texmex/corpus/gist.tar.gz'
+        fn = download(url, 'gist.tar.tz')
+        with tarfile.open(fn, 'r:gz') as t:
+            train = _get_irisa_matrix(t, 'gist/gist_base.fvecs')
+            # test = _get_irisa_matrix(t, 'gist/gist_query.fvecs')
+            write_output(train, out_fn, 'euclidean', self.version)
 
 
 def _load_mnist_vectors(fn):
@@ -165,33 +189,40 @@ def _load_mnist_vectors(fn):
     return numpy.array(vectors)
 
 
-def mnist(out_fn):
-    fn = download('http://yann.lecun.com/exdb/mnist/train-images-idx3-ubyte.gz', 'mnist-train.gz')
-    # download('http://yann.lecun.com/exdb/mnist/t10k-images-idx3-ubyte.gz', 'mnist-test.gz')
-    train = _load_mnist_vectors(fn)
-    # test = _load_mnist_vectors('mnist-test.gz')
-    write_output(train, out_fn, 'euclidean', version = 1)
+class MNIST(object):
+    version = 1
+
+    def build(self, out_fn):
+        fn = download('http://yann.lecun.com/exdb/mnist/train-images-idx3-ubyte.gz', 'mnist-train.gz')
+        # download('http://yann.lecun.com/exdb/mnist/t10k-images-idx3-ubyte.gz', 'mnist-test.gz')
+        train = _load_mnist_vectors(fn).astype(numpy.float)
+        # test = _load_mnist_vectors('mnist-test.gz')
+        write_output(train, out_fn, 'euclidean', self.version)
 
 
-def fashion_mnist(out_fn):
-    fn = download('http://fashion-mnist.s3-website.eu-central-1.amazonaws.com/train-images-idx3-ubyte.gz', 'fashion-mnist-train.gz')
-    # download('http://fashion-mnist.s3-website.eu-central-1.amazonaws.com/t10k-images-idx3-ubyte.gz', 'fashion-mnist-test.gz')
-    train = _load_mnist_vectors(fn)
-    # _test = _load_mnist_vectors('fashion-mnist-test.gz')
-    write_output(train, out_fn, 'euclidean', version = 1)
+class Fashion_MNIST(object):
+    version = 1
+
+    def build(self, out_fn):
+        fn = download('http://fashion-mnist.s3-website.eu-central-1.amazonaws.com/train-images-idx3-ubyte.gz', 'fashion-mnist-train.gz')
+        # download('http://fashion-mnist.s3-website.eu-central-1.amazonaws.com/t10k-images-idx3-ubyte.gz', 'fashion-mnist-test.gz')
+        train = _load_mnist_vectors(fn).astype(numpy.float)
+        print(train.dtype)
+        # _test = _load_mnist_vectors('fashion-mnist-test.gz')
+        write_output(train, out_fn, 'euclidean', self.version)
 
 
 DATASETS = {
-    'fashion-mnist-784-euclidean': fashion_mnist,
-    'gist-960-euclidean': gist,
-    'glove-25-angular': lambda out_fn: glove(out_fn, 25),
-    'glove-50-angular': lambda out_fn: glove(out_fn, 50),
-    'glove-100-angular': lambda out_fn: glove(out_fn, 100),
-    'glove-200-angular': lambda out_fn: glove(out_fn, 200),
-    'glove-2m-300-angular': lambda out_fn: glove2m(out_fn),
-    'gnews-300-angular': lambda out_fn: gnews(out_fn),
-    'mnist-784-euclidean': mnist,
-    'sift-128-euclidean': sift,
+    'fashion-mnist-784-euclidean': Fashion_MNIST(),
+    'gist-960-euclidean': Gist(),
+    'glove-25-angular': Glove(25),
+    'glove-50-angular': Glove(50),
+    'glove-100-angular': Glove(100),
+    'glove-200-angular': Glove(200),
+    'glove-2m-300-angular': Glove2m(),
+    'gnews-300-angular': GNews(),
+    'mnist-784-euclidean': MNIST(),
+    'sift-128-euclidean': SIFT(),
 }
 
 if __name__ == "__main__":
@@ -199,3 +230,4 @@ if __name__ == "__main__":
         print("USAGE: ./datasets.py dataset_name", file=sys.stderr)
     dataset = sys.argv[1]
     print(get_dataset(dataset))
+    print(DATASETS[dataset].version)

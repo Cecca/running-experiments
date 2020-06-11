@@ -7,7 +7,11 @@ int main(int argc, char **argv) {
 
   // Just a dummy call
   // record_result("test", 1, "algotest", 1, "params", 128);
-  std::cout << dataset_path("fashion-mnist-784-euclidean") << std::endl;
+  auto dataset = load("fashion-mnist-784-euclidean");
+  for (size_t i=0; i<784; i++) {
+    std::cout << dataset[i] << " ";
+  }
+  std::cout << std::endl;
 
   return 0;
 }
