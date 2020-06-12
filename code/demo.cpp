@@ -1,5 +1,10 @@
 #include "report.hpp"
 #include "datasets.hpp"
+#include "toy_project/dataset.hpp"
+#include "toy_project/real_vector.hpp"
+#include "toy_project/distance.hpp"
+
+using namespace toy_project;
 
 int main(int argc, char **argv) {
   // Bring the database schema to the most up to date version
@@ -15,6 +20,7 @@ int main(int argc, char **argv) {
   //
   // With this information, C++ reads the dataset from HDF5.
   auto dataset = load("fashion-mnist-784-euclidean");
+  std::cout << "Number of vectors is " << dataset.num_vectors() << std::endl;
   auto first = dataset.get(0);
   size_t dim = first.size();
   std::cout << "dimensionality is " << dim << std::endl;
@@ -22,6 +28,28 @@ int main(int argc, char **argv) {
     std::cout << first[i] << " ";
   }
   std::cout << std::endl;
+
+  // transforming data into memory aligned storage
+  auto vector_storage =
+      toy_project::Dataset<RealVectorFormat>(dim, dataset.num_vectors());
+
+  for (size_t i=0; i < dim; i++) {
+      vector_storage.insert(dataset.get(i));
+  }
+
+  const float* query = vector_storage[0];
+  float min_dist = std::numeric_limits<float>::max();
+  int min_index = -1;
+
+  for (int i=1; i < dim; i++) {
+      if (l2_distance_float_simple(query,
+           vector_storage[i], dim) < min_dist) {
+        min_dist = l2_distance_float_simple(query, vector_storage[i], dim);
+        min_index = i;
+      }
+  }
+
+ std::cout << min_index << std::endl;
 
   // Just a dummy call
   record_result("test", 1, "algotest", 1, "params", 128);

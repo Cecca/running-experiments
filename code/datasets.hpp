@@ -46,6 +46,14 @@ class Dataset {
     std::valarray<float> get(size_t i) {
         return inner[std::slice(i * dim, dim, 1)];
     }
+
+    int num_vectors() {
+        return n;
+    }
+
+    int dimension() {
+        return dim;
+    }
 };
 
 DatasetConfig dataset_path(std::string name) {
