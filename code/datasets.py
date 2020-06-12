@@ -46,15 +46,24 @@ def get_dataset(which):
 
 def write_output(vectors, fn, distance, version, point_type='float', count=100):
     import sklearn.preprocessing
+    import sklearn.model_selection
+
+    if distance == 'angular':
+        vectors = sklearn.preprocessing.normalize(vectors, axis=1, norm='l2')
+
+    #print('Splitting %d*%d into train/test' % vectors.shape)
+    data, queries = sklearn.model_selection.train_test_split(vectors, test_size=100, random_state=1)
     n = 0
     f = h5py.File(fn, 'w')
     g = f.create_group(str(version))
     g.attrs['distance'] = distance
     g.attrs['point_type'] = point_type
     g.attrs['version'] = version
-    if distance == 'angular':
-        vectors = sklearn.preprocessing.normalize(vectors, axis=1, norm='l2')
-    g.create_dataset('vectors', (len(vectors), len(vectors[0])), dtype=vectors.dtype)[:] = vectors
+
+    g.create_dataset('data', (len(data), len(data[0])), dtype=vectors.dtype)[:] = data
+    g.create_dataset('queries', (len(queries), len(queries[0])), dtype=vectors.dtype)[:] = queries
+
+# TODO: Also write ground truth
     f.close()
 
 class GNews(object):
