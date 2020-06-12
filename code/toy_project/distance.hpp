@@ -172,4 +172,20 @@ namespace toy_project {
         }
         return res;
     }
+
+    struct Angular {
+        using t = int16_t;
+        static constexpr t (*simple_distance)(const t*, const t*, unsigned int) = &dot_product_i16_simple;
+        static constexpr t (*avx2_distance)(const t*, const t*, unsigned int) = &dot_product_i16_avx2;
+        static constexpr t (*avx512_distance)(const t*, const t*, unsigned int) = &dot_product_i16_avx512;
+    };
+
+    struct L2 {
+        using t = float;
+        static constexpr t (*simple_distance)(const t*, const t*, unsigned int) = &l2_distance_float_simple;
+        static constexpr t (*avx2_distance)(const t*, const t*, unsigned int) = &l2_distance_float_avx2;
+        static constexpr t (*avx512_distance)(const t*, const t*, unsigned int) = &l2_distance_float_avx512;
+    };
+
+
 }

@@ -15,21 +15,22 @@ void show_usage(std::string name) {
               << "\t--dataset NAME\n"
               << "\t--help Displays this text\n"
               << "\t--method simple | avx2 | avx512\n"
+              << "\t--force Overwrite run if it's present\n"
               << std::endl;
 }
 
-template <typename T>
+template <typename T, typename D>
 std::pair<long long, std::vector<size_t>> bruteforce(
         const VectorStorage<T>& dataset,
         const VectorStorage<T>& queryset,
         size_t dim,
         std::string method
 ) {
-    auto dist = &l2_distance_float_simple;
+    auto dist = D::simple_distance;
     if (method == "avx2") {
-        dist = &l2_distance_float_avx2;
+        dist = D::avx2_distance;
     } else if (method == "avx512") {
-        dist = &l2_distance_float_avx512;
+        dist = D::avx512_distance;
     }
 
 
@@ -57,56 +58,16 @@ std::pair<long long, std::vector<size_t>> bruteforce(
     return std::make_pair((end-start).count(), res);
 }
 
-template <>
-std::pair<long long, std::vector<size_t>> bruteforce(
-        const VectorStorage<UnitVectorFormat>& dataset,
-        const VectorStorage<UnitVectorFormat>& queryset,
-        size_t dim,
-        std::string method
-) {
-    auto dist = &dot_product_i16_simple;
-    if (method == "avx2") {
-        dist = &dot_product_i16_avx2;
-    } else if (method == "avx512") {
-        dist = &dot_product_i16_avx512;
-    }
-
-    std::vector<size_t> res;
-
-    auto start = std::chrono::high_resolution_clock::now();
-
-    for (size_t i=0; i < queryset.get_size();  i++) {
-        auto query = queryset[i];
-        float min_dist = std::numeric_limits<float>::max();
-        int min_index = -1;
-
-        for (size_t j=0; j < dataset.get_size(); j++) {
-            if (dist(query, dataset[j], dim) < min_dist) {
-                min_dist = dist(query, dataset[j], dim);
-                min_index = j;
-            }
-        }
-        res.push_back(min_index);
-    }
-
-    auto end = std::chrono::high_resolution_clock::now();
-
-    std::cout << (end-start).count() / 1e6 << std::endl;
-    return std::make_pair((end-start).count(), res);
-}
-
-template <typename T>
+template <typename T, typename D>
 std::pair<long long, std::vector<size_t>>
 run_experiment(Dataset& dataset, Dataset& queries,
         const std::string method) {
 
     size_t dim = dataset.dimension();
 
-    auto data_vectors = VectorStorage<T>(
-            dim, dataset.num_vectors());
+    auto data_vectors = VectorStorage<T>(dim, dataset.num_vectors());
 
-    auto query_vectors = VectorStorage<T>(
-            dim, queries.num_vectors());
+    auto query_vectors = VectorStorage<T>(dim, queries.num_vectors());
 
     for (int i=0; i < dataset.num_vectors(); i++) {
         data_vectors.insert(dataset.get(i));
@@ -116,7 +77,7 @@ run_experiment(Dataset& dataset, Dataset& queries,
         query_vectors.insert(queries.get(i));
     }
 
-    return bruteforce(data_vectors, query_vectors, dim, method);
+    return bruteforce<T,D>(data_vectors, query_vectors, dim, method);
 }
 
 int main(int argc, char **argv) {
@@ -127,6 +88,7 @@ int main(int argc, char **argv) {
 
   std::string dataset_name = "fashion-mnist-784-euclidean";
   std::string method = "simple";
+  bool force = false;
 
   for (int i=1; i < argc; i++) {
       std::string arg = argv[i];
@@ -144,6 +106,9 @@ int main(int argc, char **argv) {
               method = argv[++i];
           }
       }
+      if (arg == "--force") {
+          force = true;
+      }
   }
 
 
@@ -158,16 +123,21 @@ int main(int argc, char **argv) {
   // With this information, C++ reads the dataset from HDF5.
   auto datasets = load(dataset_name);
   if (contains_result(dataset_name, 1, "bruteforce", 1, method)) {
-      std::cout << "Experiment already carried out -- skipping" << std::endl;
-      return 0;
+      if (force) {
+          std::cout << "Dropping existing experiment" << std::endl;
+          drop_result(dataset_name, 1, "bruteforce", 1, method);
+      } else {
+          std::cout << "Experiment already carried out -- skipping" << std::endl;
+          return 0;
+      }
   }
 
   // transforming data into memory aligned storage
   if (dataset_name.find("euclidean") != std::string::npos) {
-      auto res = run_experiment<RealVectorFormat>(datasets.first, datasets.second, method);
+      auto res = run_experiment<RealVectorFormat, L2>(datasets.first, datasets.second, method);
       record_result(dataset_name, 1, "bruteforce", 1, method, res.first);
   } else if (dataset_name.find("angular") != std::string::npos) {
-      auto res = run_experiment<UnitVectorFormat>(datasets.first, datasets.second, method);
+      auto res = run_experiment<UnitVectorFormat, Angular>(datasets.first, datasets.second, method);
       record_result(dataset_name, 1, "bruteforce", 1, method, res.first);
   } else {
       std::cerr << "No valid distance function found." << std::endl;
