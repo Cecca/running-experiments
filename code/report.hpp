@@ -4,7 +4,6 @@
 #include <sstream>
 #include <chrono>
 #include <iomanip>
-#include <unistd.h>
 #include "sqlite_wrapper.hpp"
 #include "sha.hpp"
 
@@ -71,9 +70,7 @@ int db_setup() {
 void record_result(std::string dataset, int dataset_version,
                    std::string algorithm, int algorithm_version,
                    std::string parameters, uint64_t running_time_ns) {
-  char buf[256];
-  gethostname(buf, 256);
-  std::string hostname = buf;
+  std::string hostname = getenv("HOST_HOSTNAME");
   std::string date = datetime_now();
   std::stringstream to_hash_stream;
   to_hash_stream << date << hostname << dataset << dataset_version << algorithm
