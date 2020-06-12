@@ -5,10 +5,10 @@
 #include <istream>
 #include <ostream>
 #include <random>
-#include <vector>
+#include <valarray>
 
-#include "toy_project/generic.hpp"
-#include "toy_project/typedefs.hpp"
+#include "generic.hpp"
+#include "typedefs.hpp"
 
 namespace toy_project {
     // Bytes in a 256-bit vector
@@ -69,7 +69,7 @@ namespace toy_project {
         }
 
         static void store(
-            const std::vector<float>& input,
+            const std::valarray<float>& input,
             Type* storage,
             DatasetDescription<UnitVectorFormat> dataset
         ) {
@@ -77,7 +77,7 @@ namespace toy_project {
                 throw std::invalid_argument("input.size()");
             }
 
-            std::vector<float> copy = input;
+            std::valarray<float> copy = input;
             float len_squared = 0.0;
             for (auto v : copy) {
                 len_squared += v*v;

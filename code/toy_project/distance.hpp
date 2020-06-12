@@ -30,9 +30,10 @@ namespace toy_project {
             for (unsigned i=0; i<VALUES_PER_VEC; i++) { ret += stored[i]; }
             return ret;
         }
-    #endif
-
-    #ifdef __AVX2__
+    #elif __AVX2__
+        static int16_t dot_product_i16_avx512(const int16_t* lhs, const int16_t* rhs, unsigned int dimensions) {
+            throw std::runtime_error("AVX-512 not available");
+        }
         static int16_t dot_product_i16_avx2(const int16_t* lhs, const int16_t* rhs, unsigned int dimensions) {
             // Number of i16 values that fit into a 256 bit vector.
             const static unsigned int VALUES_PER_VEC = 16;
@@ -57,6 +58,13 @@ namespace toy_project {
             for (unsigned i=0; i<VALUES_PER_VEC; i++) { ret += stored[i]; }
             return ret;
         }
+    #else
+        static int16_t dot_product_i16_avx512(const int16_t* lhs, const int16_t* rhs, unsigned int dimensions) {
+            throw std::runtime_error("AVX-512 not available");
+        }
+        static int16_t dot_product_i16_avx2(const int16_t* lhs, const int16_t* rhs, unsigned int dimensions) {
+            throw std::runtime_error("AVX2 not available");
+        }
     #endif
 
     static int16_t dot_product_i16_simple(const int16_t* lhs, const int16_t* rhs, unsigned int dimensions) {
@@ -68,15 +76,6 @@ namespace toy_project {
         return res;
     }
 
-    static int16_t dot_product_i16(const int16_t* lhs, const int16_t* rhs, unsigned int dimensions) {
-        #ifdef __AVX_512_F__
-            return dot_product_i16_avx512(lhs, rhs, dimensions);
-        #elif __AVX2__
-            return dot_product_i16_avx2(lhs, rhs, dimensions);
-        #else
-            return dot_product_i16_simple(lhs, rhs, dimensions);
-        #endif
-    }
 
     static float dot_product_simple(const float* lhs, const float* rhs, unsigned int dimensions) {
         float res = 0.0f;
@@ -89,7 +88,7 @@ namespace toy_project {
     #ifdef __AVX_512_F__
         // Compute the l2 distance between two floating point vectors without taking the
         // final root.
-        static float l2_distance_float_avx(const float* lhs, const float* rhs, unsigned int dimensions) {
+        static float l2_distance_float_avx512(const float* lhs, const float* rhs, unsigned int dimensions) {
             // Number of float values that fit into a 512 bit vector.
             const static unsigned int VALUES_PER_VEC = 16;
 
@@ -119,9 +118,13 @@ namespace toy_project {
         }
 
     #elif __AVX__
+        static float l2_distance_float_avx512(const float* lhs, const float* rhs, unsigned int dimensions) {
+            throw std::runtime_error("AVX 512 not available");
+        }
+
         // Compute the l2 distance between two floating point vectors without taking the
         // final root.
-        static float l2_distance_float_avx(const float* lhs, const float* rhs, unsigned int dimensions) {
+        static float l2_distance_float_avx2(const float* lhs, const float* rhs, unsigned int dimensions) {
             // Number of float values that fit into a 256 bit vector.
             const static unsigned int VALUES_PER_VEC = 8;
 
@@ -149,6 +152,16 @@ namespace toy_project {
             }
             return ret;
         }
+    #else
+        static float l2_distance_float_avx512(const float* lhs, const float* rhs, unsigned int dimensions) {
+            throw std::runtime_error("AVX 512 not available");
+        }
+
+        // Compute the l2 distance between two floating point vectors without taking the
+        // final root.
+        static float l2_distance_float_avx2(const float* lhs, const float* rhs, unsigned int dimensions) {
+            throw std::runtime_error("AVX 512 not available");
+        }
     #endif
 
     static float l2_distance_float_simple(const float* lhs, const float* rhs, unsigned int dimensions) {
@@ -158,13 +171,5 @@ namespace toy_project {
             res += diff*diff;
         }
         return res;
-    }
-
-    static float l2_distance_float(const float* lhs, const float* rhs, unsigned int dimensions) {
-        #ifdef __AVX__
-            return l2_distance_float_avx(lhs, rhs, dimensions);
-        #else
-            return l2_distance_float_simple(lhs, rhs, dimensions);
-        #endif
     }
 }
