@@ -60,7 +60,7 @@ def write_output(vectors, fn, distance, version, point_type='float', count=100):
 class GNews(object):
     version = 1
 
-    def build(self, out_fn): 
+    def build(self, out_fn):
         import gensim
 
         url = 'https://s3.amazonaws.com/dl4j-distribution/GoogleNews-vectors-negative300.bin.gz'
@@ -207,7 +207,6 @@ class Fashion_MNIST(object):
         fn = download('http://fashion-mnist.s3-website.eu-central-1.amazonaws.com/train-images-idx3-ubyte.gz', 'fashion-mnist-train.gz')
         # download('http://fashion-mnist.s3-website.eu-central-1.amazonaws.com/t10k-images-idx3-ubyte.gz', 'fashion-mnist-test.gz')
         train = _load_mnist_vectors(fn).astype(numpy.float)
-        print(train.dtype)
         # _test = _load_mnist_vectors('fashion-mnist-test.gz')
         write_output(train, out_fn, 'euclidean', self.version)
 
