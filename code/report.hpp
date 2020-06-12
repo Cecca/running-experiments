@@ -67,6 +67,31 @@ int db_setup() {
 }
 
 
+bool contains_result(std::string dataset, int dataset_version,
+                   std::string algorithm, int algorithm_version,
+                   std::string parameters) {
+
+  sqlite::Connection conn = db_connection();
+  sqlite::Statement stmt(
+        conn,
+        "SELECT COUNT(*) FROM results WHERE"
+        " hostname = :hostname AND "
+        " dataset = :dataset AND "
+        " dataset_version = :dataset_version AND "
+        " algorithm = :algorithm AND "
+        " algorithm_version = :algorithm_version AND "
+        " parameters = :parameters;");
+  stmt.bind_text(":hostname", getenv("HOST_HOSTNAME"));
+  stmt.bind_text(":dataset", dataset);
+  stmt.bind_int(":dataset_version", dataset_version);
+  stmt.bind_text(":algorithm", algorithm);
+  stmt.bind_int(":algorithm_version", algorithm_version);
+  stmt.bind_text(":parameters", parameters);
+  stmt.exec();
+
+  return stmt.read_int(0) > 0;
+}
+
 void record_result(std::string dataset, int dataset_version,
                    std::string algorithm, int algorithm_version,
                    std::string parameters, uint64_t running_time_ns) {

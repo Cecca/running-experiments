@@ -157,6 +157,10 @@ int main(int argc, char **argv) {
   //
   // With this information, C++ reads the dataset from HDF5.
   auto datasets = load(dataset_name);
+  if (contains_result(dataset_name, 1, "bruteforce", 1, method)) {
+      std::cout << "Experiment already carried out -- skipping" << std::endl;
+      return 0;
+  }
 
   // transforming data into memory aligned storage
   if (dataset_name.find("euclidean") != std::string::npos) {
