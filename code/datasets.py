@@ -219,6 +219,21 @@ class Fashion_MNIST(object):
         # _test = _load_mnist_vectors('fashion-mnist-test.gz')
         write_output(train, out_fn, 'euclidean', self.version)
 
+class Random(object):
+
+    version = 1
+
+    def __init__(self, n_dims, n_samples, centers, distance):
+        self.n_dims = n_dims
+        self.n_samples = n_samples
+        self.centers = centers
+        self.distance = distance
+
+    def build(self, out_fn):
+        import sklearn.datasets
+
+        X, _ = sklearn.datasets.make_blobs(n_samples=self.n_samples, n_features=self.n_dims, centers=self.centers, random_state=1)
+        write_output(X, out_fn, self.distance, self.version)
 
 DATASETS = {
     'fashion-mnist-784-euclidean': Fashion_MNIST(),
@@ -230,6 +245,10 @@ DATASETS = {
     'glove-2m-300-angular': Glove2m(),
     'gnews-300-angular': GNews(),
     'mnist-784-euclidean': MNIST(),
+    'random-xs-20-euclidean': Random(20, 10000, 100, 'euclidean'),
+    'random-s-100-euclidean': Random(100, 100000, 1000, 'euclidean'),
+    'random-xs-20-angular': Random(20, 10000, 100, 'angular'),
+    'random-s-100-angular': Random(100, 100000, 1000, 'angular'),
     'sift-128-euclidean': SIFT(),
 }
 
