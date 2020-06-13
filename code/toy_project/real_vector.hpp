@@ -38,36 +38,14 @@ namespace toy_project {
 
         static void free(Type&) {}
 
-        static std::vector<float> generate_random(unsigned int dimensions) {
+        static std::valarray<float> generate_random(unsigned int dimensions) {
             std::normal_distribution<float> normal_distribution(0.0, 1.0);
             auto& generator = get_default_random_generator();
-            std::vector<float> values;
+            std::valarray<float> values(dimensions);
             for (unsigned int i=0; i<dimensions; i++) {
-                values.push_back(normal_distribution(generator));
+                values[i] = normal_distribution(generator);
             }
             return values;
         }
     };
-
-    struct RealVectorFormatUnaligned: RealVectorFormat {
-        const static unsigned int ALIGNMENT = 0;
-
-        static void store(
-            const std::valarray<float>& input,
-            Type* storage,
-            DatasetDescription<RealVectorFormatUnaligned> dataset
-        ) {
-            if (input.size() != dataset.args) {
-                throw std::invalid_argument("input.size()");
-            }
-            for (size_t i=0; i < dataset.args; i++) {
-                storage[i] = input[i];
-            }
-            for (size_t i=dataset.args; i < dataset.storage_len; i++) {
-                storage[i] = 0.0;
-            }
-        }
-
-    };
-
 }

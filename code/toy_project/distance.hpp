@@ -4,9 +4,11 @@
     #include <immintrin.h>
 #endif
 
+#include "unit_vector.hpp"
+
 namespace toy_project {
     #ifdef __AVX512_F__
-        static int16_t dot_product_i16_avx512(const int16_t* lhs, const int16_t* rhs, unsigned int dimensions) {
+        static float dot_product_i16_avx512(const int16_t* lhs, const int16_t* rhs, unsigned int dimensions) {
             // Number of i16 values that fit into a 512 bit vector.
             const static unsigned int VALUES_PER_VEC = 32;
 
@@ -28,9 +30,9 @@ namespace toy_project {
             _mm512_store_si512((__m512i*)stored, res);
             int16_t ret = 0;
             for (unsigned i=0; i<VALUES_PER_VEC; i++) { ret += stored[i]; }
-            return ret;
+            return UnitVectorFormat::from_16bit_fixed_point(ret);
         }
-        static int16_t dot_product_i16_avx2(const int16_t* lhs, const int16_t* rhs, unsigned int dimensions) {
+        static float dot_product_i16_avx2(const int16_t* lhs, const int16_t* rhs, unsigned int dimensions) {
             // Number of i16 values that fit into a 256 bit vector.
             const static unsigned int VALUES_PER_VEC = 16;
 
@@ -52,13 +54,13 @@ namespace toy_project {
             _mm256_store_si256((__m256i*)stored, res);
             int16_t ret = 0;
             for (unsigned i=0; i<VALUES_PER_VEC; i++) { ret += stored[i]; }
-            return ret;
+            return UnitVectorFormat::from_16bit_fixed_point(ret);
         }
     #elif __AVX2__
-        static int16_t dot_product_i16_avx512(const int16_t* lhs, const int16_t* rhs, unsigned int dimensions) {
+        static float dot_product_i16_avx512(const int16_t* lhs, const int16_t* rhs, unsigned int dimensions) {
             throw std::runtime_error("AVX-512 not available");
         }
-        static int16_t dot_product_i16_avx2(const int16_t* lhs, const int16_t* rhs, unsigned int dimensions) {
+        static float dot_product_i16_avx2(const int16_t* lhs, const int16_t* rhs, unsigned int dimensions) {
             // Number of i16 values that fit into a 256 bit vector.
             const static unsigned int VALUES_PER_VEC = 16;
 
@@ -80,24 +82,24 @@ namespace toy_project {
             _mm256_store_si256((__m256i*)stored, res);
             int16_t ret = 0;
             for (unsigned i=0; i<VALUES_PER_VEC; i++) { ret += stored[i]; }
-            return ret;
+            return UnitVectorFormat::from_16bit_fixed_point(ret);
         }
     #else
-        static int16_t dot_product_i16_avx512(const int16_t* lhs, const int16_t* rhs, unsigned int dimensions) {
+        static float dot_product_i16_avx512(const int16_t* lhs, const int16_t* rhs, unsigned int dimensions) {
             throw std::runtime_error("AVX-512 not available");
         }
-        static int16_t dot_product_i16_avx2(const int16_t* lhs, const int16_t* rhs, unsigned int dimensions) {
+        static float dot_product_i16_avx2(const int16_t* lhs, const int16_t* rhs, unsigned int dimensions) {
             throw std::runtime_error("AVX2 not available");
         }
     #endif
 
-    static int16_t dot_product_i16_simple(const int16_t* lhs, const int16_t* rhs, unsigned int dimensions) {
+    static float dot_product_i16_simple(const int16_t* lhs, const int16_t* rhs, unsigned int dimensions) {
         int16_t res = 0;
         for (unsigned int i=0; i < dimensions; i++) {
             int32_t precise = static_cast<int32_t>(lhs[i])*static_cast<int32_t>(rhs[i]);
             res += static_cast<int16_t>(((precise >> 14)+1) >> 1);
         }
-        return res;
+        return UnitVectorFormat::from_16bit_fixed_point(res);
     }
 
 #ifdef __AVX_512_F__
@@ -330,9 +332,12 @@ namespace toy_project {
 
     struct IP_i16 {
         using t = int16_t;
-        static constexpr t (*simple_distance)(const t*, const t*, unsigned int) = &dot_product_i16_simple;
-        static constexpr t (*avx2_distance)(const t*, const t*, unsigned int) = &dot_product_i16_avx2;
-        static constexpr t (*avx512_distance)(const t*, const t*, unsigned int) = &dot_product_i16_avx512;
+        static constexpr float (*simple_distance)(const t*, const t*, unsigned int) = &dot_product_i16_simple;
+        static constexpr float (*avx2_distance)(const t*, const t*, unsigned int) = &dot_product_i16_avx2;
+        static constexpr float (*avx512_distance)(const t*, const t*, unsigned int) = &dot_product_i16_avx512;
+
+        static float inf() {return std::numeric_limits<float>::min();}
+        static bool cmp(float x, float y) { return x > y;}
     };
 
 
@@ -341,13 +346,19 @@ namespace toy_project {
         static constexpr t (*simple_distance)(const t*, const t*, unsigned int) = &l2_distance_float_simple;
         static constexpr t (*avx2_distance)(const t*, const t*, unsigned int) = &l2_distance_float_avx2;
         static constexpr t (*avx512_distance)(const t*, const t*, unsigned int) = &l2_distance_float_avx512;
+
+        static float inf() {return std::numeric_limits<float>::max();}
+        static bool cmp(float x, float y) { return x < y;}
     };
 
     struct IP_float {
-        using t = float; 
+        using t = float;
         static constexpr t (*simple_distance)(const t*, const t*, unsigned int) = &dot_product_simple;
         static constexpr t (*avx2_distance)(const t*, const t*, unsigned int) = &dot_product_avx2;
         static constexpr t (*avx512_distance)(const t*, const t*, unsigned int) = &dot_product_avx512;
+
+        static float inf() {return std::numeric_limits<float>::min();}
+        static bool cmp(float x, float y) { return x > y;}
     };
 
 

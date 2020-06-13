@@ -8,6 +8,7 @@ namespace toy_project {
     // Number of bits used in filtering sketches.
     const static unsigned int NUM_FILTER_HASHBITS = 64;
     using FilterLshDatatype = uint64_t;
+    using LshDatatype = uint32_t;
 
     std::default_random_engine generator(std::chrono::system_clock::now().time_since_epoch().count());
 

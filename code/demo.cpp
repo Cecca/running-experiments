@@ -4,6 +4,7 @@
 #include "toy_project/real_vector.hpp"
 #include "toy_project/distance.hpp"
 #include "toy_project/unit_vector.hpp"
+#include "toy_project/filter.hpp"
 
 using namespace toy_project;
 
@@ -19,12 +20,13 @@ void show_usage(std::string name) {
               << std::endl;
 }
 
-template <typename T, typename D>
+template <typename T, typename D, typename F>
 std::pair<long long, std::vector<size_t>> bruteforce(
         const VectorStorage<T>& dataset,
         const VectorStorage<T>& queryset,
         size_t dim,
-        std::string method
+        std::string method,
+        F& filter
 ) {
     auto dist = D::simple_distance;
     if (method == "avx2") {
@@ -37,36 +39,41 @@ std::pair<long long, std::vector<size_t>> bruteforce(
     std::vector<size_t> res;
 
     auto start = std::chrono::high_resolution_clock::now();
+    long long dist_comps = 0;
 
     for (size_t i=0; i < queryset.get_size();  i++) {
         auto query = queryset[i];
-        float min_dist = std::numeric_limits<float>::max();
-        int min_index = -1;
+        float best_dist = D::inf(); 
+        int best_index= -1;
 
         for (size_t j=0; j < dataset.get_size(); j++) {
-            if (dist(query, dataset[j], dim) < min_dist) {
-                min_dist = dist(query, dataset[j], dim);
-                min_index = j;
+            if (filter.passes(i, j)) {
+                auto d = dist(query, dataset[j], dim);
+                dist_comps++;
+                if (D::cmp(d, best_dist)) {
+                    best_dist = d;
+                    filter.update(d);
+                    best_index = j;
+                }
             }
         }
-        res.push_back(min_index);
+        res.push_back(best_index);
     }
 
     auto end = std::chrono::high_resolution_clock::now();
 
     std::cout << (end-start).count() / 1e6 << std::endl;
+    std::cout << dist_comps / ((float)dataset.get_size() * queryset.get_size()) << std::endl;
     return std::make_pair((end-start).count(), res);
 }
 
-template <typename T, typename D>
+template <typename T, typename D, typename F>
 std::pair<long long, std::vector<size_t>>
 run_experiment(Dataset& dataset, Dataset& queries,
-        const std::string method) {
+        const std::string method, float recall) {
 
-    size_t dim = dataset.dimension();
-
+    auto dim = dataset.dimension();
     auto data_vectors = VectorStorage<T>(dim, dataset.num_vectors());
-
     auto query_vectors = VectorStorage<T>(dim, queries.num_vectors());
 
     for (int i=0; i < dataset.num_vectors(); i++) {
@@ -77,7 +84,10 @@ run_experiment(Dataset& dataset, Dataset& queries,
         query_vectors.insert(queries.get(i));
     }
 
-    return bruteforce<T,D>(data_vectors, query_vectors, dim, method);
+    F filter = F(recall);
+    filter.setup(data_vectors, query_vectors);
+
+    return bruteforce<T,D,F>(data_vectors, query_vectors, dim, method, filter);
 }
 
 int main(int argc, char **argv) {
@@ -91,7 +101,10 @@ int main(int argc, char **argv) {
   std::string dataset_name = "fashion-mnist-784-euclidean";
   std::string method = "simple";
   std::string storage = "float_aligned";
+  bool filter = false;
   bool force = false;
+
+  float recall = 0.5f;
 
   for (int i=1; i < argc; i++) {
       std::string arg = argv[i];
@@ -114,8 +127,16 @@ int main(int argc, char **argv) {
               storage = argv[++i];
           }
       }
+      if (arg == "--recall") {
+          if (i+1 < argc) {
+              recall = atof(argv[++i]);
+          }
+      }
       if (arg == "--force") {
           force = true;
+      }
+      if (arg == "--filter") {
+          filter = true;
       }
   }
 
@@ -149,19 +170,32 @@ int main(int argc, char **argv) {
   // transforming data into memory aligned storage
   if (dataset_name.find("euclidean") != std::string::npos) {
       if (storage == "float_aligned") {
-          res = run_experiment<RealVectorFormat, L2>(datasets.first, datasets.second, method);
-      } else if (storage == "float_unaligned") {
-          res = run_experiment<RealVectorFormatUnaligned, L2>(datasets.first, datasets.second, method);
+          res = run_experiment<RealVectorFormat, L2, 
+                    NoFilter<RealVectorFormat>>(
+                            datasets.first, datasets.second, method, recall);
       }
-  } else if (dataset_name.find("angular") != std::string::npos) {
+  }
+  else if (dataset_name.find("angular") != std::string::npos) {
       if (storage == "i16_aligned") {
-          res = run_experiment<UnitVectorFormat, IP_i16>(datasets.first, datasets.second, method);
-      } else if (storage == "i16_unaligned") {
-          res = run_experiment<UnitVectorFormatUnaligned, IP_i16>(datasets.first, datasets.second, method);
+          if (!filter) {
+              res = run_experiment<UnitVectorFormat, IP_i16,
+                      NoFilter<UnitVectorFormat>>(
+                          datasets.first, datasets.second, method, recall);
+          } else {
+              res = run_experiment<UnitVectorFormat, IP_i16,
+                      Filter<UnitVectorFormat>>(
+                          datasets.first, datasets.second, method, recall);
+          }
       } else if (storage == "float_aligned") {
-          res = run_experiment<RealVectorFormat, IP_float>(datasets.first, datasets.second, method);
-      } else if (storage == "float_unaligned") {
-          res = run_experiment<RealVectorFormatUnaligned, IP_float>(datasets.first, datasets.second, method);
+          if (!filter) {
+              res = run_experiment<RealVectorFormat, IP_float,
+                        NoFilter<RealVectorFormat>>(
+                                datasets.first, datasets.second, method, recall);
+          } else {
+              res = run_experiment<RealVectorFormat, IP_float,
+                        Filter<RealVectorFormat>>(
+                                datasets.first, datasets.second, method, recall);
+          }
       }
   } else {
       std::cerr << "No valid distance function found." << std::endl;

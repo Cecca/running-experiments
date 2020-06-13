@@ -100,32 +100,17 @@ namespace toy_project {
 
         static void free(Type&) {}
 
-        static std::vector<float> generate_random(unsigned int dimensions) {
+        static std::valarray<float> generate_random(unsigned int dimensions) {
             std::normal_distribution<float> normal_distribution(0.0, 1.0);
             auto& generator = get_default_random_generator();
 
-            std::vector<float> values;
+            std::valarray<float> values(dimensions);
             for (unsigned int i=0; i<dimensions; i++) {
-                values.push_back(normal_distribution(generator));
+                values[i] = normal_distribution(generator);
             }
             return values;
         }
 
-        static void serialize_args(std::ostream& out, const Args& args) {
-            out.write(reinterpret_cast<const char*>(&args), sizeof(Args));
-        }
-
-        static void deserialize_args(std::istream& in, Args* args) {
-            in.read(reinterpret_cast<char*>(args), sizeof(Args));
-        }
-
-        static void serialize_type(std::ostream& out, const Type& type) {
-            out.write(reinterpret_cast<const char*>(&type), sizeof(Type));
-        }
-
-        static void deserialize_type(std::istream& in, Type* type) {
-            in.read(reinterpret_cast<char*>(type), sizeof(Type));
-        }
     };
 
     template <>
@@ -140,39 +125,4 @@ namespace toy_project {
         }
         return res;
     }
-
-    struct UnitVectorFormatUnaligned: UnitVectorFormat {
-        const static unsigned int ALIGNMENT = 0;
-
-        static void store(
-            const std::valarray<float>& input,
-            Type* storage,
-            DatasetDescription<UnitVectorFormatUnaligned> dataset
-        ) {
-            if (input.size() != dataset.args) {
-                throw std::invalid_argument("input.size()");
-            }
-
-            std::valarray<float> copy = input;
-            float len_squared = 0.0;
-            for (auto v : copy) {
-                len_squared += v*v;
-            }
-
-            auto len = std::sqrt(len_squared);
-            if (len != 0.0) {
-                for (auto& v : copy) {
-                    v /= len;
-                }
-            }
-
-            for (size_t i=0; i < copy.size(); i++) {
-                storage[i] = to_16bit_fixed_point(copy[i]);
-            }
-            for (size_t i=copy.size(); i < dataset.storage_len; i++) {
-                storage[i] = to_16bit_fixed_point(0.0);
-            }
-        }
-    };
-
 }
