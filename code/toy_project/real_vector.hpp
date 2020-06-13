@@ -48,4 +48,26 @@ namespace toy_project {
             return values;
         }
     };
+
+    struct RealVectorFormatUnaligned: RealVectorFormat {
+        const static unsigned int ALIGNMENT = 0;
+
+        static void store(
+            const std::valarray<float>& input,
+            Type* storage,
+            DatasetDescription<RealVectorFormatUnaligned> dataset
+        ) {
+            if (input.size() != dataset.args) {
+                throw std::invalid_argument("input.size()");
+            }
+            for (size_t i=0; i < dataset.args; i++) {
+                storage[i] = input[i];
+            }
+            for (size_t i=dataset.args; i < dataset.storage_len; i++) {
+                storage[i] = 0.0;
+            }
+        }
+
+    };
+
 }

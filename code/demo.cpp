@@ -88,6 +88,7 @@ int main(int argc, char **argv) {
 
   std::string dataset_name = "fashion-mnist-784-euclidean";
   std::string method = "simple";
+  std::string storage = "float_aligned";
   bool force = false;
 
   for (int i=1; i < argc; i++) {
@@ -106,11 +107,17 @@ int main(int argc, char **argv) {
               method = argv[++i];
           }
       }
+      if (arg == "--storage") {
+          if (i+1 < argc) {
+              storage = argv[++i];
+          }
+      }
       if (arg == "--force") {
           force = true;
       }
   }
 
+  std::string run_identifier = "method=" + method + "; storage=" + storage;
 
   // Datasets are loaded _by name_, not by filename!
   // It works as follows: the C++ calls Python and reads its
@@ -122,28 +129,44 @@ int main(int argc, char **argv) {
   //
   // With this information, C++ reads the dataset from HDF5.
   auto datasets = load(dataset_name);
-  if (contains_result(dataset_name, 1, "bruteforce", 1, method)) {
-      if (force) {
-          std::cout << "Dropping existing experiment" << std::endl;
-          drop_result(dataset_name, 1, "bruteforce", 1, method);
-      } else {
-          std::cout << "Experiment already carried out -- skipping" << std::endl;
-          return 0;
-      }
+  if (!force && contains_result(dataset_name, 1, "bruteforce", 1, run_identifier)) {
+      std::cout << "Experiment already carried out -- skipping" << std::endl;
+      return 0;
   }
+
+  // TODO data might be aligned because of the dimensionality.
+  if (storage.find("unaligned") != std::string::npos &&
+          method.find("avx") != std::string::npos) {
+      std::cerr << "Cannot run vectorized code on unaligned data. " << std::endl;
+      return 3;
+  }
+
+
+  std::pair<long long, std::vector<size_t>> res;
 
   // transforming data into memory aligned storage
   if (dataset_name.find("euclidean") != std::string::npos) {
-      auto res = run_experiment<RealVectorFormat, L2>(datasets.first, datasets.second, method);
-      record_result(dataset_name, 1, "bruteforce", 1, method, res.first);
+      if (storage == "float_aligned") {
+          res = run_experiment<RealVectorFormat, L2>(datasets.first, datasets.second, method);
+      } else if (storage == "float_unaligned") {
+          res = run_experiment<RealVectorFormatUnaligned, L2>(datasets.first, datasets.second, method);
+      }
   } else if (dataset_name.find("angular") != std::string::npos) {
-      auto res = run_experiment<UnitVectorFormat, Angular>(datasets.first, datasets.second, method);
-      record_result(dataset_name, 1, "bruteforce", 1, method, res.first);
+      if (storage == "i16_aligned") {
+          res = run_experiment<UnitVectorFormat, IP_i16>(datasets.first, datasets.second, method);
+      } else if (storage == "i16_unaligned") {
+          res = run_experiment<UnitVectorFormatUnaligned, IP_i16>(datasets.first, datasets.second, method);
+      } else if (storage == "float_aligned") {
+          res = run_experiment<RealVectorFormat, IP_float>(datasets.first, datasets.second, method);
+      } else if (storage == "float_unaligned") {
+          res = run_experiment<RealVectorFormatUnaligned, IP_float>(datasets.first, datasets.second, method);
+      }
   } else {
       std::cerr << "No valid distance function found." << std::endl;
       return 2;
   }
 
+  record_result(dataset_name, 1, "bruteforce", 1, run_identifier, res.first);
 
   return 0;
 }

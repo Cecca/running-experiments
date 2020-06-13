@@ -140,4 +140,39 @@ namespace toy_project {
         }
         return res;
     }
+
+    struct UnitVectorFormatUnaligned: UnitVectorFormat {
+        const static unsigned int ALIGNMENT = 0;
+
+        static void store(
+            const std::valarray<float>& input,
+            Type* storage,
+            DatasetDescription<UnitVectorFormatUnaligned> dataset
+        ) {
+            if (input.size() != dataset.args) {
+                throw std::invalid_argument("input.size()");
+            }
+
+            std::valarray<float> copy = input;
+            float len_squared = 0.0;
+            for (auto v : copy) {
+                len_squared += v*v;
+            }
+
+            auto len = std::sqrt(len_squared);
+            if (len != 0.0) {
+                for (auto& v : copy) {
+                    v /= len;
+                }
+            }
+
+            for (size_t i=0; i < copy.size(); i++) {
+                storage[i] = to_16bit_fixed_point(copy[i]);
+            }
+            for (size_t i=copy.size(); i < dataset.storage_len; i++) {
+                storage[i] = to_16bit_fixed_point(0.0);
+            }
+        }
+    };
+
 }
