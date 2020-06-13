@@ -1,2 +1,12 @@
+GIT_SHA := $(shell git rev-parse --short HEAD)
+GIT_DIRTY := $(shell git diff --exit-code > /dev/null || echo "*")
+
+CXXFLAGS=-std=c++17 -Wall -O3 -march=native -I/usr/include/hdf5/serial 
+LINKFLAGS=-lsqlite3 -lssl -lcrypto -lhdf5_cpp -lhdf5 -L/usr/lib/x86_64-linux-gnu/hdf5/serial/
+
 demo: demo.cpp *.hpp toy_project/*.hpp
-	${CXX} -std=c++17 -Wall demo.cpp -o demo -lsqlite3 -lssl -lcrypto -lhdf5_cpp -lhdf5 -I/usr/include/hdf5/serial -L/usr/lib/x86_64-linux-gnu/hdf5/serial/ -O3 -march=native
+	${CXX} ${CXXFLAGS} -DGIT_REV='"${GIT_SHA}${GIT_DIRTY}"' demo.cpp -o demo ${LINKFLAGS}
+
+.PHONY: clean
+clean:
+	${RM} demo

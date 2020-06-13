@@ -11,6 +11,15 @@ sqlite::Connection db_connection() {
   return sqlite::Connection("file:demo-db.sqlite");
 }
 
+std::string get_hostname() {
+  char* h = getenv("HOST_HOSTNAME");
+  if (h) {
+    return std::string(h);
+  } else {
+    return std::string("NULL");
+  }
+}
+
 std::string datetime_now() {
   auto now = std::chrono::system_clock::now();
   auto epoch_seconds = std::chrono::system_clock::to_time_t(now);
@@ -40,6 +49,7 @@ int db_setup() {
     sqlite::Statement create_table(conn,
                                    "CREATE TABLE results ("
                                    "  sha                 TEXT PRIMARY KEY,"
+                                   "  git_rev             TEXT,"
                                    "  hostname            TEXT,"
                                    "  date                TEXT,"
                                    "  dataset             TEXT,"
@@ -70,8 +80,10 @@ int db_setup() {
 bool contains_result(std::string dataset, int dataset_version,
                    std::string algorithm, int algorithm_version,
                    std::string parameters) {
-
   sqlite::Connection conn = db_connection();
+  // We don't check for the GIT_REV, since a change in the git revision
+  // might not imply a change in the dataset/algorithm version, hence
+  // we don't want it to trigger a rerun
   sqlite::Statement stmt(
         conn,
         "SELECT COUNT(*) FROM results WHERE"
@@ -81,7 +93,7 @@ bool contains_result(std::string dataset, int dataset_version,
         " algorithm = :algorithm AND "
         " algorithm_version = :algorithm_version AND "
         " parameters = :parameters;");
-  stmt.bind_text(":hostname", getenv("HOST_HOSTNAME"));
+  stmt.bind_text(":hostname", get_hostname());
   stmt.bind_text(":dataset", dataset);
   stmt.bind_int(":dataset_version", dataset_version);
   stmt.bind_text(":algorithm", algorithm);
@@ -106,7 +118,7 @@ void drop_result(std::string dataset, int dataset_version,
         " algorithm = :algorithm AND "
         " algorithm_version = :algorithm_version AND "
         " parameters = :parameters;");
-  stmt.bind_text(":hostname", getenv("HOST_HOSTNAME"));
+  stmt.bind_text(":hostname", get_hostname());
   stmt.bind_text(":dataset", dataset);
   stmt.bind_int(":dataset_version", dataset_version);
   stmt.bind_text(":algorithm", algorithm);
@@ -118,7 +130,9 @@ void drop_result(std::string dataset, int dataset_version,
 void record_result(std::string dataset, int dataset_version,
                    std::string algorithm, int algorithm_version,
                    std::string parameters, uint64_t running_time_ns) {
-  std::string hostname = getenv("HOST_HOSTNAME");
+  std::string hostname = get_hostname();
+  std::string git_rev = GIT_REV;
+  std::cout << "HERE" << git_rev << std::endl;
   std::string date = datetime_now();
   std::stringstream to_hash_stream;
   to_hash_stream << date << hostname << dataset << dataset_version << algorithm
@@ -129,12 +143,13 @@ void record_result(std::string dataset, int dataset_version,
   sqlite::Statement stmt(
       conn,
       "INSERT INTO results"
-      "  (sha, hostname, date, dataset, dataset_version, algorithm, algorithm_version, "
+      "  (sha, git_rev, hostname, date, dataset, dataset_version, algorithm, algorithm_version, "
       "   parameters, running_time_ns)"
-      "VALUES (:sha, :hostname, :date, :dataset, :dataset_version, :algorithm, "
+      "VALUES (:sha, :git_rev, :hostname, :date, :dataset, :dataset_version, :algorithm, "
       "        :algorithm_version, :parameters, :running_time_ns);");
 
   stmt.bind_text(":sha", sha);
+  stmt.bind_text(":git_rev", git_rev);
   stmt.bind_text(":hostname", hostname);
   stmt.bind_text(":date", date);
   stmt.bind_text(":dataset", dataset);

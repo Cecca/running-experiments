@@ -81,6 +81,8 @@ run_experiment(Dataset& dataset, Dataset& queries,
 }
 
 int main(int argc, char **argv) {
+  std::cout << "Running with code version " << GIT_REV << std::endl;
+
   // Bring the database schema to the most up to date version
   db_setup();
 
