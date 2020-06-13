@@ -40,13 +40,14 @@ int db_setup() {
     sqlite::Statement create_table(conn,
                                    "CREATE TABLE results ("
                                    "  sha                 TEXT PRIMARY KEY,"
+                                   "  hostname            TEXT,"
                                    "  date                TEXT,"
                                    "  dataset             TEXT,"
                                    "  dataset_version     INT,"
                                    "  algorithm           TEXT,"
                                    "  algorithm_version   INT,"
                                    "  parameters          TEXT,"
-                                   "  running_time_ms     INT64"
+                                   "  running_time_ns     INT64"
                                    ");");
     create_table.exec();
     // Bump version number to the one of the initialized database
@@ -66,12 +67,61 @@ int db_setup() {
 }
 
 
+bool contains_result(std::string dataset, int dataset_version,
+                   std::string algorithm, int algorithm_version,
+                   std::string parameters) {
+
+  sqlite::Connection conn = db_connection();
+  sqlite::Statement stmt(
+        conn,
+        "SELECT COUNT(*) FROM results WHERE"
+        " hostname = :hostname AND "
+        " dataset = :dataset AND "
+        " dataset_version = :dataset_version AND "
+        " algorithm = :algorithm AND "
+        " algorithm_version = :algorithm_version AND "
+        " parameters = :parameters;");
+  stmt.bind_text(":hostname", getenv("HOST_HOSTNAME"));
+  stmt.bind_text(":dataset", dataset);
+  stmt.bind_int(":dataset_version", dataset_version);
+  stmt.bind_text(":algorithm", algorithm);
+  stmt.bind_int(":algorithm_version", algorithm_version);
+  stmt.bind_text(":parameters", parameters);
+  stmt.exec();
+
+  return stmt.read_int(0) > 0;
+}
+
+void drop_result(std::string dataset, int dataset_version,
+                   std::string algorithm, int algorithm_version,
+                   std::string parameters) {
+
+  sqlite::Connection conn = db_connection();
+  sqlite::Statement stmt(
+        conn,
+        "DELETE FROM results WHERE"
+        " hostname = :hostname AND "
+        " dataset = :dataset AND "
+        " dataset_version = :dataset_version AND "
+        " algorithm = :algorithm AND "
+        " algorithm_version = :algorithm_version AND "
+        " parameters = :parameters;");
+  stmt.bind_text(":hostname", getenv("HOST_HOSTNAME"));
+  stmt.bind_text(":dataset", dataset);
+  stmt.bind_int(":dataset_version", dataset_version);
+  stmt.bind_text(":algorithm", algorithm);
+  stmt.bind_int(":algorithm_version", algorithm_version);
+  stmt.bind_text(":parameters", parameters);
+  stmt.exec();
+}
+
 void record_result(std::string dataset, int dataset_version,
                    std::string algorithm, int algorithm_version,
-                   std::string parameters, uint64_t running_time_ms) {
+                   std::string parameters, uint64_t running_time_ns) {
+  std::string hostname = getenv("HOST_HOSTNAME");
   std::string date = datetime_now();
   std::stringstream to_hash_stream;
-  to_hash_stream << date << dataset << dataset_version << algorithm
+  to_hash_stream << date << hostname << dataset << dataset_version << algorithm
                  << algorithm_version << parameters;
   std::string sha = sha256_string(to_hash_stream.str());
 
@@ -79,19 +129,20 @@ void record_result(std::string dataset, int dataset_version,
   sqlite::Statement stmt(
       conn,
       "INSERT INTO results"
-      "  (sha, date, dataset, dataset_version, algorithm, algorithm_version, "
-      "   parameters, running_time_ms)"
-      "VALUES (:sha, :date, :dataset, :dataset_version, :algorithm, "
-      "        :algorithm_version, :parameters, :running_time_ms);");
+      "  (sha, hostname, date, dataset, dataset_version, algorithm, algorithm_version, "
+      "   parameters, running_time_ns)"
+      "VALUES (:sha, :hostname, :date, :dataset, :dataset_version, :algorithm, "
+      "        :algorithm_version, :parameters, :running_time_ns);");
 
   stmt.bind_text(":sha", sha);
+  stmt.bind_text(":hostname", hostname);
   stmt.bind_text(":date", date);
   stmt.bind_text(":dataset", dataset);
   stmt.bind_int(":dataset_version", dataset_version);
   stmt.bind_text(":algorithm", algorithm);
   stmt.bind_int(":algorithm_version", algorithm_version);
   stmt.bind_text(":parameters", parameters);
-  stmt.bind_int64(":running_time_ms", running_time_ms);
+  stmt.bind_int64(":running_time_ns", running_time_ns);
   stmt.exec();
 }
 

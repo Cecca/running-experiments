@@ -46,15 +46,24 @@ def get_dataset(which):
 
 def write_output(vectors, fn, distance, version, point_type='float', count=100):
     import sklearn.preprocessing
+    import sklearn.model_selection
+
+    if distance == 'angular':
+        vectors = sklearn.preprocessing.normalize(vectors, axis=1, norm='l2')
+
+    #print('Splitting %d*%d into train/test' % vectors.shape)
+    data, queries = sklearn.model_selection.train_test_split(vectors, test_size=100, random_state=1)
     n = 0
     f = h5py.File(fn, 'w')
     g = f.create_group(str(version))
     g.attrs['distance'] = distance
     g.attrs['point_type'] = point_type
     g.attrs['version'] = version
-    if distance == 'angular':
-        vectors = sklearn.preprocessing.normalize(vectors, axis=1, norm='l2')
-    g.create_dataset('vectors', (len(vectors), len(vectors[0])), dtype=vectors.dtype)[:] = vectors
+
+    g.create_dataset('data', (len(data), len(data[0])), dtype=vectors.dtype)[:] = data
+    g.create_dataset('queries', (len(queries), len(queries[0])), dtype=vectors.dtype)[:] = queries
+
+# TODO: Also write ground truth
     f.close()
 
 class GNews(object):
@@ -210,6 +219,21 @@ class Fashion_MNIST(object):
         # _test = _load_mnist_vectors('fashion-mnist-test.gz')
         write_output(train, out_fn, 'euclidean', self.version)
 
+class Random(object):
+
+    version = 1
+
+    def __init__(self, n_dims, n_samples, centers, distance):
+        self.n_dims = n_dims
+        self.n_samples = n_samples
+        self.centers = centers
+        self.distance = distance
+
+    def build(self, out_fn):
+        import sklearn.datasets
+
+        X, _ = sklearn.datasets.make_blobs(n_samples=self.n_samples, n_features=self.n_dims, centers=self.centers, random_state=1)
+        write_output(X, out_fn, self.distance, self.version)
 
 DATASETS = {
     'fashion-mnist-784-euclidean': Fashion_MNIST(),
@@ -221,6 +245,10 @@ DATASETS = {
     'glove-2m-300-angular': Glove2m(),
     'gnews-300-angular': GNews(),
     'mnist-784-euclidean': MNIST(),
+    'random-xs-20-euclidean': Random(20, 10000, 100, 'euclidean'),
+    'random-s-100-euclidean': Random(100, 100000, 1000, 'euclidean'),
+    'random-xs-20-angular': Random(20, 10000, 100, 'angular'),
+    'random-s-100-angular': Random(100, 100000, 1000, 'angular'),
     'sift-128-euclidean': SIFT(),
 }
 

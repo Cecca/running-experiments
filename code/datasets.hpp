@@ -68,7 +68,7 @@ DatasetConfig dataset_path(std::string name) {
     return config;
 }
 
-Dataset load(std::string name) {
+std::pair<Dataset, Dataset> load(std::string name) {
 
     DatasetConfig conf = dataset_path(name);
     std::stringstream sstr;
@@ -77,23 +77,31 @@ Dataset load(std::string name) {
     // Open the file and get the dataset
     H5::H5File file( conf.path, H5F_ACC_RDONLY );
     H5::Group group = file.openGroup(sstr.str());
-    H5::DataSet dataset = group.openDataSet( "vectors" );
+    H5::DataSet dataset = group.openDataSet( "data" );
     H5T_class_t type_class = dataset.getTypeClass();
     // Check that we have a dataset of floats
     if (type_class != H5T_FLOAT) { throw std::runtime_error("wrong type class"); }
     H5::DataSpace dataspace = dataset.getSpace();
 
     // Get the number of vectors and the dimensionality
-    hsize_t dims_out[2];
-    dataspace.getSimpleExtentDims(dims_out, NULL);
-    
+    hsize_t data_dims_out[2];
+    dataspace.getSimpleExtentDims(data_dims_out, NULL);
+
     // Read the output into a row-major vector.
     // It is super cumbersome to read it into a vector 
     // of vectors. The general advice is to handle 
     // indexing manually, perhaps with the help of
     // std::slice
-    std::valarray<float> output(dims_out[0] * dims_out[1]);
-    dataset.read(&output[0], H5::PredType::NATIVE_FLOAT);
+    std::valarray<float> data_output(data_dims_out[0] * data_dims_out[1]);
+    dataset.read(&data_output[0], H5::PredType::NATIVE_FLOAT);
 
-    return Dataset(output, dims_out[0], dims_out[1]);
+    dataset = group.openDataSet( "queries" );
+    dataspace = dataset.getSpace();
+    hsize_t queries_dims_out[2];
+    dataspace.getSimpleExtentDims(queries_dims_out, NULL);
+    std::valarray<float> queries_output(queries_dims_out[0] * queries_dims_out[1]);
+    dataset.read(&queries_output[0], H5::PredType::NATIVE_FLOAT);
+
+    return std::make_pair(Dataset(data_output, data_dims_out[0], data_dims_out[1]),
+           Dataset(queries_output, queries_dims_out[0], queries_dims_out[1]));
 }

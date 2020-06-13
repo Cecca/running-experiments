@@ -12,7 +12,7 @@ namespace toy_project {
     // The container for all inserted vectors.
     // The data is stored according to the given format.
     template <typename T>
-    class Dataset {
+    class VectorStorage {
         // Arguments
         typename T::Args args;
         // Number of dimensions of stored vectors, which may be padded to
@@ -28,7 +28,7 @@ namespace toy_project {
     public:
         // Create an empty storage for vectors with the given number of dimensions.
         // Allocates enough space for the given number of vectors before needing to reallocate.
-        Dataset(typename T::Args args, unsigned int capacity)
+        VectorStorage(typename T::Args args, unsigned int capacity)
           : args(args),
             storage_len(pad_dimensions<T>(T::storage_dimensions(args))),
             inserted_vectors(0),
@@ -37,7 +37,7 @@ namespace toy_project {
         {
         }
 
-        Dataset(Dataset&& other)
+        VectorStorage(VectorStorage&& other)
           : args(other.args),
             storage_len(other.storage_len),
             inserted_vectors(other.inserted_vectors),
@@ -46,7 +46,7 @@ namespace toy_project {
         {
         }
 
-        Dataset& operator=(Dataset&& rhs) {
+        VectorStorage& operator=(VectorStorage&& rhs) {
             if (this != &rhs) {
                 args = rhs.args;
                 storage_len = rhs.storage_len;
