@@ -81,6 +81,8 @@ run_experiment(Dataset& dataset, Dataset& queries,
 }
 
 int main(int argc, char **argv) {
+  std::cout << "Running with code version " << GIT_REV << std::endl;
+
   // Bring the database schema to the most up to date version
   db_setup();
 
@@ -111,7 +113,6 @@ int main(int argc, char **argv) {
       }
   }
 
-
   // Datasets are loaded _by name_, not by filename!
   // It works as follows: the C++ calls Python and reads its
   // standard output, which contains the path to the hdf5 file
@@ -131,6 +132,7 @@ int main(int argc, char **argv) {
           return 0;
       }
   }
+
 
   // transforming data into memory aligned storage
   if (dataset_name.find("euclidean") != std::string::npos) {
