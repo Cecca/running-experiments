@@ -157,14 +157,6 @@ int main(int argc, char **argv) {
       return 0;
   }
 
-  // TODO data might be aligned because of the dimensionality.
-  if (storage.find("unaligned") != std::string::npos &&
-          method.find("avx") != std::string::npos) {
-      std::cerr << "Cannot run vectorized code on unaligned data. " << std::endl;
-      return 3;
-  }
-
-
   std::pair<long long, std::vector<size_t>> res;
 
   // transforming data into memory aligned storage
