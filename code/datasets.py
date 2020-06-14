@@ -28,7 +28,7 @@ def disk_version(which):
     hdf5_fn = get_dataset_fn(which)
     if not os.path.exists(hdf5_fn):
         return None
-    f = h5py.File(hdf5_fn)
+    f = h5py.File(hdf5_fn, "r")
     return max([int(k) for k in f.keys()])
 
 
@@ -39,7 +39,7 @@ def get_dataset(which):
         return hdf5_fn
     print("Updating dataset", which, "from version", disk_version(which), "to version", DATASETS[which].version, file=sys.stderr)
     DATASETS[which].build(hdf5_fn)
-    hdf5_f = h5py.File(hdf5_fn)
+    hdf5_f = h5py.File(hdf5_fn, "r")
     return hdf5_fn
 
 # Everything below this line is related to creating datasets
