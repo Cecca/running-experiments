@@ -14,7 +14,7 @@ namespace toy_project {
     // Bytes in a 256-bit vector
     const int VECTOR256_ALIGNMENT = 256/8;
 
-    // Bytes in a 256-bit vector
+    // Bytes in a 512-bit vector
     const int VECTOR512_ALIGNMENT = 512/8;
 
     /// A format for storing real vectors of unit length.
@@ -34,7 +34,7 @@ namespace toy_project {
         /// Number of dimensions.
         using Args = unsigned int;
 
-#ifdef __AVX_512_F__
+#ifdef __AVX512F__
         const static unsigned int ALIGNMENT = VECTOR512_ALIGNMENT;
 
         // Number of `Type` values that fit into a 512 bit vector.

@@ -1,13 +1,13 @@
 #pragma once
 
-#if defined(__AVX512_F__) || defined(__AVX2__) || defined(__AVX__)
+#if defined(__AVX512F__) || defined(__AVX2__) || defined(__AVX__)
     #include <immintrin.h>
 #endif
 
 #include "unit_vector.hpp"
 
 namespace toy_project {
-    #ifdef __AVX512_F__
+    #ifdef __AVX512F__
         static float dot_product_i16_avx512(const int16_t* lhs, const int16_t* rhs, unsigned int dimensions) {
             // Number of i16 values that fit into a 512 bit vector.
             const static unsigned int VALUES_PER_VEC = 32;
@@ -102,7 +102,7 @@ namespace toy_project {
         return UnitVectorFormat::from_16bit_fixed_point(res);
     }
 
-#ifdef __AVX_512_F__
+#ifdef __AVX512F__
     static float dot_product_avx512(const float* lhs, const float* rhs, unsigned int dimensions) {
         const static unsigned int VALUES_PER_VEC = 16;
 
@@ -213,7 +213,7 @@ namespace toy_project {
         return res;
     }
 
-    #ifdef __AVX_512_F__
+    #ifdef __AVX512F__
         // Compute the l2 distance between two floating point vectors without taking the
         // final root.
         static float l2_distance_float_avx512(const float* lhs, const float* rhs, unsigned int dimensions) {

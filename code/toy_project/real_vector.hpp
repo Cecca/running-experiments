@@ -8,7 +8,7 @@ namespace toy_project {
     struct RealVectorFormat {
         using Type = float;
         using Args = unsigned int;
-#ifdef __AVX_512_F__
+#ifdef __AVX512F__
         // 512 bit vectors
         const static unsigned int ALIGNMENT = 512/8;
 #else
