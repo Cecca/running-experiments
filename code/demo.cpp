@@ -202,7 +202,7 @@ int main(int argc, char **argv) {
       return 2;
   }
 
-  record_result(dataset_name, 1, "bruteforce", 1, run_identifier, res.first);
+  record_result(dataset_name, 1, "bruteforce", 1, run_identifier, res.first, res.second);
 
   return 0;
 }

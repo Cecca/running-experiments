@@ -4,6 +4,7 @@
 #include <sstream>
 #include <chrono>
 #include <iomanip>
+#include <vector>
 #include "sqlite_wrapper.hpp"
 #include "sha.hpp"
 
@@ -47,7 +48,7 @@ int db_setup() {
   case 1: {
     std::cout << "applying initial schema definitions" << std::endl;
     sqlite::Statement create_table(conn,
-                                   "CREATE TABLE results ("
+                                   "CREATE TABLE results_raw ("
                                    "  sha                 TEXT PRIMARY KEY,"
                                    "  git_rev             TEXT,"
                                    "  hostname            TEXT,"
@@ -60,11 +61,45 @@ int db_setup() {
                                    "  running_time_ns     INT64"
                                    ");");
     create_table.exec();
+    sqlite::Statement create_table2(conn,
+                                    "CREATE TABLE nearest_neighbors ("
+                                    "  sha                     TEXT,"
+                                    "  query_index             INT,"
+                                    "  nearest_neighbor_index  INT,"
+                                    "  FOREIGN KEY(sha) REFERENCES results_raw(sha)"
+                                    ")");
+    create_table2.exec();
     // Bump version number to the one of the initialized database
     sqlite::Statement bump(conn, "PRAGMA user_version = 1");
     bump.exec();
   }
   case 2: {
+    // TODO: we should select just the most recent one
+    sqlite::Statement create_view(conn,
+                                  "CREATE VIEW baseline AS "
+                                  "SELECT dataset, dataset_version, query_index, nearest_neighbor_index as baseline_nn "
+                                  "FROM (SELECT * FROM results_raw NATURAL JOIN "
+                                  "    (SELECT algorithm, MAX(algorithm_version) AS algorithm_version "
+                                  "        FROM results_raw "
+                                  "        WHERE algorithm == 'bruteforce'"
+                                  "          AND parameters == 'method=simple; storage=float_aligned')) "
+                                  "NATURAL JOIN nearest_neighbors;"
+                                  );
+    create_view.exec();
+    sqlite::Statement create_view2(conn,
+      "CREATE VIEW results AS "
+      "SELECT * FROM results_raw NATURAL JOIN "
+      "   (SELECT sha, (1.0 - SUM(baseline_nn != nearest_neighbor_index) / COUNT(sha)) AS recall "
+      "        FROM baseline NATURAL JOIN (SELECT sha, dataset, dataset_version, query_index, nearest_neighbor_index "
+      "                                       FROM results_raw NATURAL JOIN nearest_neighbors) "
+      "        GROUP BY sha);"
+    );
+    create_view2.exec();
+
+    sqlite::Statement bump(conn, "PRAGMA user_version = 2");
+    bump.exec();
+  }
+  case 3: {
     std::cout << "results database schema up to date" << std::endl;
     break;
   }
@@ -86,7 +121,7 @@ bool contains_result(std::string dataset, int dataset_version,
   // we don't want it to trigger a rerun
   sqlite::Statement stmt(
         conn,
-        "SELECT COUNT(*) FROM results WHERE"
+        "SELECT COUNT(*) FROM results_raw WHERE"
         " hostname = :hostname AND "
         " dataset = :dataset AND "
         " dataset_version = :dataset_version AND "
@@ -106,10 +141,10 @@ bool contains_result(std::string dataset, int dataset_version,
 
 void record_result(std::string dataset, int dataset_version,
                    std::string algorithm, int algorithm_version,
-                   std::string parameters, uint64_t running_time_ns) {
+                   std::string parameters, uint64_t running_time_ns,
+                   std::vector<size_t> nearest_neighbors) {
   std::string hostname = get_hostname();
   std::string git_rev = GIT_REV;
-  std::cout << "HERE" << git_rev << std::endl;
   std::string date = datetime_now();
   std::stringstream to_hash_stream;
   to_hash_stream << date << hostname << dataset << dataset_version << algorithm
@@ -119,7 +154,7 @@ void record_result(std::string dataset, int dataset_version,
   sqlite::Connection conn = db_connection();
   sqlite::Statement stmt(
       conn,
-      "INSERT INTO results"
+      "INSERT INTO results_raw"
       "  (sha, git_rev, hostname, date, dataset, dataset_version, algorithm, algorithm_version, "
       "   parameters, running_time_ns)"
       "VALUES (:sha, :git_rev, :hostname, :date, :dataset, :dataset_version, :algorithm, "
@@ -136,5 +171,18 @@ void record_result(std::string dataset, int dataset_version,
   stmt.bind_text(":parameters", parameters);
   stmt.bind_int64(":running_time_ns", running_time_ns);
   stmt.exec();
+
+  sqlite::Statement stmt_nn(
+    conn,
+    "INSERT INTO nearest_neighbors"
+    "  (sha, query_index, nearest_neighbor_index)"
+    "VALUES (:sha, :query_index, :nearest_neighbor_index)"
+  );
+  for (size_t query_index=0; query_index < nearest_neighbors.size(); query_index++) {
+    stmt_nn.bind_text(":sha", sha);
+    stmt_nn.bind_int(":query_index", query_index);
+    stmt_nn.bind_int(":nearest_neighbor_index", nearest_neighbors[query_index]);
+    stmt_nn.exec();
+  }
 }
 
