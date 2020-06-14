@@ -1,0 +1,6 @@
+.devcontainer/
+__pycache__/
+data/
+demo
+demo-db.sqlite
+downloads/
