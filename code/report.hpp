@@ -74,6 +74,32 @@ int db_setup() {
     bump.exec();
   }
   case 2: {
+    // TODO: we should select just the most recent one
+    sqlite::Statement create_view(conn,
+                                  "CREATE VIEW baseline AS "
+                                  "SELECT dataset, dataset_version, query_index, nearest_neighbor_index as baseline_nn "
+                                  "FROM (SELECT * FROM results_raw NATURAL JOIN "
+                                  "    (SELECT algorithm, MAX(algorithm_version) AS algorithm_version "
+                                  "        FROM results_raw "
+                                  "        WHERE algorithm == 'bruteforce'"
+                                  "          AND parameters == 'method=simple; storage=float_aligned')) "
+                                  "NATURAL JOIN nearest_neighbors;"
+                                  );
+    create_view.exec();
+    sqlite::Statement create_view2(conn,
+      "CREATE VIEW results AS "
+      "SELECT * FROM results_raw NATURAL JOIN "
+      "   (SELECT sha, (1.0 - SUM(baseline_nn != nearest_neighbor_index) / COUNT(sha)) AS recall "
+      "        FROM baseline NATURAL JOIN (SELECT sha, dataset, dataset_version, query_index, nearest_neighbor_index "
+      "                                       FROM results_raw NATURAL JOIN nearest_neighbors) "
+      "        GROUP BY sha);"
+    );
+    create_view2.exec();
+
+    sqlite::Statement bump(conn, "PRAGMA user_version = 2");
+    bump.exec();
+  }
+  case 3: {
     std::cout << "results database schema up to date" << std::endl;
     break;
   }
