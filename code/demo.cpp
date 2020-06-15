@@ -168,7 +168,7 @@ int main(int argc, char **argv) {
   //
   // With this information, C++ reads the dataset from HDF5.
   auto datasets = load(dataset_name);
-  if (!force && contains_result(dataset_name, 1, "bruteforce", ALGO_VERSION, run_identifier.str())) {
+  if (!force && contains_result(seed, dataset_name, 1, "bruteforce", ALGO_VERSION, run_identifier.str())) {
       std::cout << "Experiment already carried out -- skipping" << std::endl;
       return 0;
   }
@@ -210,7 +210,7 @@ int main(int argc, char **argv) {
       return 2;
   }
 
-  record_result(dataset_name, 1, "bruteforce", ALGO_VERSION, run_identifier.str(), res.first, res.second);
+  record_result(dataset_name, 1, "bruteforce", ALGO_VERSION, run_identifier.str(), seed, res.first, res.second);
 
   return 0;
 }

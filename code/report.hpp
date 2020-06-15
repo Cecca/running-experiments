@@ -100,6 +100,13 @@ int db_setup() {
     bump.exec();
   }
   case 3: {
+    sqlite::Statement add_column(conn, "ALTER TABLE results_raw ADD COLUMN seed INT64 DEFAULT 0;");
+    add_column.exec();
+
+    sqlite::Statement bump(conn, "PRAGMA user_version = 3");
+    bump.exec();
+  }
+  case 4: {
     std::cout << "results database schema up to date" << std::endl;
     break;
   }
@@ -112,7 +119,7 @@ int db_setup() {
 }
 
 
-bool contains_result(std::string dataset, int dataset_version,
+bool contains_result(uint64_t seed, std::string dataset, int dataset_version,
                    std::string algorithm, int algorithm_version,
                    std::string parameters) {
   sqlite::Connection conn = db_connection();
@@ -123,12 +130,14 @@ bool contains_result(std::string dataset, int dataset_version,
         conn,
         "SELECT COUNT(*) FROM results_raw WHERE"
         " hostname = :hostname AND "
+        " seed = :seed AND "
         " dataset = :dataset AND "
         " dataset_version = :dataset_version AND "
         " algorithm = :algorithm AND "
         " algorithm_version = :algorithm_version AND "
         " parameters = :parameters;");
   stmt.bind_text(":hostname", get_hostname());
+  stmt.bind_int64(":seed", seed);
   stmt.bind_text(":dataset", dataset);
   stmt.bind_int(":dataset_version", dataset_version);
   stmt.bind_text(":algorithm", algorithm);
@@ -141,7 +150,7 @@ bool contains_result(std::string dataset, int dataset_version,
 
 void record_result(std::string dataset, int dataset_version,
                    std::string algorithm, int algorithm_version,
-                   std::string parameters, uint64_t running_time_ns,
+                   std::string parameters, uint64_t seed, uint64_t running_time_ns,
                    std::vector<size_t> nearest_neighbors) {
   std::string hostname = get_hostname();
   std::string git_rev = GIT_REV;
@@ -155,15 +164,16 @@ void record_result(std::string dataset, int dataset_version,
   sqlite::Statement stmt(
       conn,
       "INSERT INTO results_raw"
-      "  (sha, git_rev, hostname, date, dataset, dataset_version, algorithm, algorithm_version, "
+      "  (sha, git_rev, hostname, date, seed, dataset, dataset_version, algorithm, algorithm_version, "
       "   parameters, running_time_ns)"
-      "VALUES (:sha, :git_rev, :hostname, :date, :dataset, :dataset_version, :algorithm, "
+      "VALUES (:sha, :git_rev, :hostname, :date, :seed, :dataset, :dataset_version, :algorithm, "
       "        :algorithm_version, :parameters, :running_time_ns);");
 
   stmt.bind_text(":sha", sha);
   stmt.bind_text(":git_rev", git_rev);
   stmt.bind_text(":hostname", hostname);
   stmt.bind_text(":date", date);
+  stmt.bind_int64(":seed", seed);
   stmt.bind_text(":dataset", dataset);
   stmt.bind_int(":dataset_version", dataset_version);
   stmt.bind_text(":algorithm", algorithm);
