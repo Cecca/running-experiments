@@ -35,14 +35,20 @@ namespace toy_project {
     template <typename T>
     class Filter {
     private:
-        uint_fast8_t max_sketch_diff = NUM_FILTER_HASHBITS;
+        uint_fast8_t max_sketch_diff;
         std::vector<SimHashFunction<T>> hash_vecs;
         std::vector<uint64_t> query_sketches;
         std::vector<uint64_t> data_sketches;
         float recall;
 
     public:
-        Filter(float recall):recall(recall) { }
+        Filter(float recall):recall(recall) { 
+            reset();
+        }
+
+        void reset() {
+            max_sketch_diff = NUM_FILTER_HASHBITS;
+        }
 
         void setup(const VectorStorage<T>& data,
                 const VectorStorage<T>& queries) {
@@ -72,15 +78,15 @@ namespace toy_project {
 
         // Check if the value at position idx in the dataset passes the next filter.
         // A value can only pass one filter.
-        bool passes(size_t query_index, size_t dataset_index ) const {
+        inline bool passes(size_t query_index, size_t dataset_index ) const {
             uint_fast8_t sketch_diff = popcountll(
                     query_sketches[query_index] ^ data_sketches[dataset_index]);
             return (sketch_diff <= max_sketch_diff);
         }
 
-        void update(float d) {
+        inline void update(float d) {
             auto exp = NUM_FILTER_HASHBITS * (std::acos(d) / M_PI);
-            auto diff = std::sqrt(exp * 3 * std::log(1/(1-recall)));
+            auto diff = std::sqrt(exp * std::log(1/(1-recall)));
             max_sketch_diff = std::roundf(exp + diff);
         }
     };
@@ -90,6 +96,8 @@ namespace toy_project {
     public:
         
         NoFilter(float recall) {}
+
+        void reset() {}
 
         void setup(const VectorStorage<T>& data, const VectorStorage<T>& queries) {
         }

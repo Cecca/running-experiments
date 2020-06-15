@@ -8,7 +8,7 @@
 #include "toy_project/unit_vector.hpp"
 #include "toy_project/filter.hpp"
 
-#define ALGO_VERSION 2
+#define ALGO_VERSION 4
 
 using namespace toy_project;
 
@@ -49,6 +49,8 @@ std::pair<long long, std::vector<size_t>> bruteforce(
         auto query = queryset[i];
         float best_dist = D::inf(); 
         int best_index= -1;
+
+        filter.reset();
 
         for (size_t j=0; j < dataset.get_size(); j++) {
             if (filter.passes(i, j)) {
