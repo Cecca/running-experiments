@@ -100,10 +100,13 @@ int db_setup() {
     bump.exec();
   }
   case 3: {
-    sqlite::Statement add_column(conn, 
-            "ALTER TABLE results_raw ADD COLUMN seed INT64 DEFAULT 0;"
+    sqlite::Statement add_column_seed(conn, 
+            "ALTER TABLE results_raw ADD COLUMN seed INT64 DEFAULT 0;");
+    add_column_seed.exec();
+
+    sqlite::Statement add_column_experiment_fn(conn, 
             "ALTER TABLE results_raw ADD COLUMN experiment_file TEXT DEFAULT \"not provided\";");
-    add_column.exec();
+    add_column_experiment_fn.exec();
 
     sqlite::Statement bump(conn, "PRAGMA user_version = 3");
     bump.exec();
