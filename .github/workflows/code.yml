@@ -25,4 +25,5 @@ jobs:
       run: |
         cd code && ./dockerrun make
         ./dockerrun ./demo --dataset random-xs-20-angular
+        ./dockerrun python3 run_yaml.py ./demo experiments/ci.yaml
         ./dockerrun python3 report.py
