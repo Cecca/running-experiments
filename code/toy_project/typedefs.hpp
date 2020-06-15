@@ -10,11 +10,9 @@ namespace toy_project {
     using FilterLshDatatype = uint64_t;
     using LshDatatype = uint32_t;
 
-    std::default_random_engine generator(std::chrono::system_clock::now().time_since_epoch().count());
-
     // Retrieve the default random engine, seeded once by the system clock.
-    std::default_random_engine& get_default_random_generator() {
-        return generator;
+    std::mt19937_64 get_random_generator(uint64_t seed) {
+        return std::mt19937_64(seed);
     }
 
     #if defined(__GNUC__)

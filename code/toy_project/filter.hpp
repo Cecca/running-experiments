@@ -12,11 +12,11 @@ namespace toy_project {
         unsigned int dimensions;
 
     public:
-        SimHashFunction(DatasetDescription<T> dataset)
+        SimHashFunction(DatasetDescription<T> dataset, std::mt19937_64 & generator)
           : hash_vec(allocate_storage<T>(1, dataset.storage_len)),
             dimensions(dataset.storage_len)
         {
-            auto vec = T::generate_random(dataset.args);
+            auto vec = T::generate_random(dataset.args, generator);
             T::store(vec, hash_vec.get(), dataset);
         }
 
@@ -51,10 +51,12 @@ namespace toy_project {
         }
 
         void setup(const VectorStorage<T>& data,
-                const VectorStorage<T>& queries) {
+                const VectorStorage<T>& queries,
+                uint64_t seed) {
+            std::mt19937_64 generator(seed);
 
             for (size_t i = 0; i < NUM_FILTER_HASHBITS; i++) {
-                hash_vecs.push_back(SimHashFunction<T>(data.get_description()));
+                hash_vecs.push_back(SimHashFunction<T>(data.get_description(), generator));
             }
 
             for (size_t i = 0; i < data.get_size(); i++) {
@@ -99,7 +101,7 @@ namespace toy_project {
 
         void reset() {}
 
-        void setup(const VectorStorage<T>& data, const VectorStorage<T>& queries) {
+        void setup(const VectorStorage<T>& data, const VectorStorage<T>& queries, uint64_t seed) {
         }
 
         inline bool passes(size_t query_index, size_t dataset_index) const {

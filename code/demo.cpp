@@ -76,7 +76,7 @@ std::pair<long long, std::vector<size_t>> bruteforce(
 template <typename T, typename D, typename F>
 std::pair<long long, std::vector<size_t>>
 run_experiment(Dataset& dataset, Dataset& queries,
-        const std::string method, float recall) {
+        const std::string method, float recall, uint64_t seed) {
 
     auto dim = dataset.dimension();
     auto data_vectors = VectorStorage<T>(dim, dataset.num_vectors());
@@ -91,7 +91,7 @@ run_experiment(Dataset& dataset, Dataset& queries,
     }
 
     F filter = F(recall);
-    filter.setup(data_vectors, query_vectors);
+    filter.setup(data_vectors, query_vectors, seed);
 
     return bruteforce<T,D,F>(data_vectors, query_vectors, dim, method, filter);
 }
@@ -111,6 +111,7 @@ int main(int argc, char **argv) {
   bool force = false;
 
   float recall = 0.5f;
+  uint64_t seed = 56423546;
 
   for (int i=1; i < argc; i++) {
       std::string arg = argv[i];
@@ -136,6 +137,11 @@ int main(int argc, char **argv) {
       if (arg == "--recall") {
           if (i+1 < argc) {
               recall = atof(argv[++i]);
+          }
+      }
+      if (arg == "--seed") {
+          if (i+1 < argc) {
+              seed = atol(argv[++i]);
           }
       }
       if (arg == "--force") {
@@ -174,7 +180,7 @@ int main(int argc, char **argv) {
       if (storage == "float_aligned") {
           res = run_experiment<RealVectorFormat, L2, 
                     NoFilter<RealVectorFormat>>(
-                            datasets.first, datasets.second, method, recall);
+                            datasets.first, datasets.second, method, recall, seed);
       }
   }
   else if (dataset_name.find("angular") != std::string::npos) {
@@ -182,21 +188,21 @@ int main(int argc, char **argv) {
           if (!filter) {
               res = run_experiment<UnitVectorFormat, IP_i16,
                       NoFilter<UnitVectorFormat>>(
-                          datasets.first, datasets.second, method, recall);
+                          datasets.first, datasets.second, method, recall, seed);
           } else {
               res = run_experiment<UnitVectorFormat, IP_i16,
                       Filter<UnitVectorFormat>>(
-                          datasets.first, datasets.second, method, recall);
+                          datasets.first, datasets.second, method, recall, seed);
           }
       } else if (storage == "float_aligned") {
           if (!filter) {
               res = run_experiment<RealVectorFormat, IP_float,
                         NoFilter<RealVectorFormat>>(
-                                datasets.first, datasets.second, method, recall);
+                                datasets.first, datasets.second, method, recall, seed);
           } else {
               res = run_experiment<RealVectorFormat, IP_float,
                         Filter<RealVectorFormat>>(
-                                datasets.first, datasets.second, method, recall);
+                                datasets.first, datasets.second, method, recall, seed);
           }
       }
   } else {
