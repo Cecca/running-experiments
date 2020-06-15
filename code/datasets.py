@@ -7,6 +7,8 @@ import zipfile
 import numpy
 from urllib.request import urlretrieve
 
+SEED = 1
+
 def download(src, dst):
     if not os.path.isdir("downloads"):
         os.mkdir("downloads")
@@ -52,7 +54,7 @@ def write_output(vectors, fn, distance, version, point_type='float', count=100):
         vectors = sklearn.preprocessing.normalize(vectors, axis=1, norm='l2')
 
     #print('Splitting %d*%d into train/test' % vectors.shape)
-    data, queries = sklearn.model_selection.train_test_split(vectors, test_size=100, random_state=1)
+    data, queries = sklearn.model_selection.train_test_split(vectors, test_size=100, random_state=SEED)
     n = 0
     f = h5py.File(fn, 'w')
     g = f.create_group(str(version))
@@ -232,7 +234,7 @@ class Random(object):
     def build(self, out_fn):
         import sklearn.datasets
 
-        X, _ = sklearn.datasets.make_blobs(n_samples=self.n_samples, n_features=self.n_dims, centers=self.centers, random_state=1)
+        X, _ = sklearn.datasets.make_blobs(n_samples=self.n_samples, n_features=self.n_dims, centers=self.centers, random_state=SEED)
         write_output(X, out_fn, self.distance, self.version)
 
 DATASETS = {
@@ -253,8 +255,14 @@ DATASETS = {
 }
 
 if __name__ == "__main__":
-    if len(sys.argv) != 2:
-        print("USAGE: ./datasets.py dataset_name", file=sys.stderr)
-    dataset = sys.argv[1]
+    if len(sys.argv) < 2:
+        print("USAGE: ./datasets.py [--list-datasets] [[-seed SEED] dataset_name]", file=sys.stderr)
+    for i, arg in enumerate(sys.argv[1:]):
+        if arg == "--seed":
+            SEED = int(sys.argv[i+2])
+        if arg == "--list-datasets":
+            print("\n".join(DATASETS.keys()))
+            sys.exit(0)
+    dataset = sys.argv[-1]
     print(get_dataset(dataset))
     print(DATASETS[dataset].version)
