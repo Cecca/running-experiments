@@ -5,6 +5,9 @@
 \usepackage{graphicx}
 \usepackage{hyperref}
 \usepackage{color}
+\usepackage{amsfonts}
+\usepackage{amsmath}
+
 
 \newcommand{\matodo}[1]{\todo[inline, color=green!50]{#1}}
 \newcommand{\cetodo}[1]{\todo[inline, color=orange!50]{#1}}
@@ -168,10 +171,30 @@ Could cite~\cite{arango2017performance} for container-based performance observat
 
 \section{Challenges in running large scale experimental evaluation}
 
-\section{Case study}
+\section{Case study: Engineering a Linear Scan}
 
-\cetodo{Here we describe our toy project. I think it's better to describe
-it here in order to use it as a running example in the next subsections.}
+As our toy project, we engineer a nearest neighbor search algorithm that just carries out a linear scan over the dataset. 
+Formally, we are given a dataset $S \subset \mathbb{R}^d$ of $n$ points in a $d$-dimensional space with a distance measure $\text{dist}\colon \mathbb{R}^d \times \mathbb{R}^d \rightarrow \mathbb{R}$, such that given a query $q \in \mathbb{R}^d$ we want to return a point $p \in S$ that minimizes dist$(p', q)$ over all $p' \in S$.
+
+Solving this problem via a linear scan is a straight-forward exercise in an introduction to programming class: Compare all points $p' \in S$ one by one to $q$, and keep track of the point that is closest to $q$. This results in a running time $O(nd)$ for a single query.
+
+To make this problem more interesting (and introduce more parameters to experiment on), we consider engineering choices to speed up such a linear scan if the distance measure is the inner product $\text{dist}_{\text{IP}}(p,q) = \sum_{1 \leq i \leq d} x_i y_i$, which is analogous to cosine similarity on unit vectors. For the purpose of this project, we consider (i) input representation, (ii) parallelization, and (iii) saving distance computations as factors.
+
+\paragraph{Input representation.}
+A vector in $\mathbb{R}^d$ is traditionally represented as $d$ 64-bit floating point values (\texttt{double}). Other engineering choices are 32-bit float (\texttt{float}, or going as far as considering 16-bit representations. Since we guarantee $0 \leq x_i \leq 1$ for normalized vecors, we can use a 16-bit representations of rounded value $\lceil x_i \cdot 256 \rceil / 256$ (which could of course affect the accuracy of the result.)
+
+\paragraph{Parallelization.}
+Naïvely, the CPU has to carry out $d$ multiplications and $d-1$ additions to compute the distance of two vectors.
+However, we notice that the structure is inherently parallel because the multiplications do not have data dependencies, which is ideal setup for using so-called SIMD instructions (single instruction multiple data). 
+In this way, we can split up each vector into blocks of size $B$, and carry out $d/B$ parallel multiplications, $d/B$ parallel additions to aggregate terms in a register of size $B$, and one horizontal sum. 
+Depending on the CPU architecture used in the experiment, $B$ is usually 128, 256, or---very recently---512 bits. Moreover, the choice of representing a single vector in $\mathbb{R}^d$ ranges gives a range of possibilities, using 32- or 64-bit floats, or use custom 16-bit representations.
+
+\paragraph{Saving Distance Computations.} Computing the distance 
+between two vectors is certainely the most expensive operation in our linear scan. Hence, if we could decide for a data point $p'$ that it probably is not the nearest neighbor looking could increase the performance of our linear scan. We include experiments with a 64-bit sketch using SimHash with probabilistic quality guarantees in our experiments. We review the approach in more detail in Appendix~\ref{app:sketches}.
+
+\medskip
+
+We consider this toy project representable for an experimentation task in a similarity search setting. An individual run is characterized by many different algorithms, there are feedback loops for the engeering choices, one has to handle datasets and their workloads, one has to measure certain attributes of the run, and so on. The experiment has to be carried out on different machines because of the hardware dependencies, which might mean to rent cloud instances to carry out measurements on recent hardware with $B = 512$ bit AVX512 support.
 
 \section{Approaches to experimental evaluation}
 
@@ -318,5 +341,9 @@ one dataset was updated. Rather, we would like to re-run only those experiments 
 or the necessities are always the same.}
 For this purpose, using the git version of the code is not well suited to this, as it is
 shared between all the components.
+
+\section{Review: 1-bit sketches via SimHash}
+\label{app:sketches}
+
 \end{document}
 
