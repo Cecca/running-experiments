@@ -25,7 +25,6 @@ public:
   ~Connection() noexcept(false) {
     switch (sqlite3_close(this->handle)) {
     case SQLITE_OK:
-      std::cout << "connection freed" << std::endl;
       break;
     default:
       throw std::runtime_error(sqlite3_errmsg(this->handle));
@@ -52,7 +51,6 @@ public:
   ~Statement() noexcept(false) {
     switch (sqlite3_finalize(this->handle)) {
     case SQLITE_OK:
-      std::cout << "statement finalized" << std::endl;
       // OK, nop
       break;
     default:
