@@ -87,7 +87,7 @@ namespace toy_project {
         inline void update(float d) {
             auto exp = NUM_FILTER_HASHBITS * (std::acos(d) / M_PI);
             auto diff = std::sqrt(exp * std::log(1/(1-recall)));
-            max_sketch_diff = std::roundf(exp + diff);
+            max_sketch_diff = std::ceil(exp + diff);
         }
     };
 
