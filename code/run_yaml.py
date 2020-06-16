@@ -25,10 +25,10 @@ if __name__ == "__main__":
     for k in exp_file['experiments']:
         if "sketches" in k and k["sketches"]:
             tasks.extend(product(datasets, k["storage"],
-                                 k["method"], ["True"], k["recall"]))
+                                 k["method"], [True], k["recall"]))
         else:
             tasks.extend(product(datasets, k["storage"],
-                                 k["method"], ["False"], [1.0]))
+                                 k["method"], [False], [1.0]))
 
     for ds, storage, method, sketches, recall in tasks:
         cmd = executable_fn
@@ -36,6 +36,7 @@ if __name__ == "__main__":
         cmd += " --storage " + storage
         cmd += " --method "  + method
         cmd += " --seed %d" % seed
+        cmd += " --experiment-file " + fn
         if sketches:
             cmd += " --filter --recall %f" % recall
         if force:
