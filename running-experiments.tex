@@ -198,6 +198,8 @@ between two vectors is certainely the most expensive operation in our linear sca
 
 We consider this toy project representable for an experimentation task in a similarity search setting. An individual run is characterized by many different algorithms, there are feedback loops for the engeering choices, one has to handle datasets and their workloads, one has to measure certain attributes of the run, and so on. The experiment has to be carried out on different machines because of the hardware dependencies, which might mean to rent cloud instances to carry out measurements on recent hardware with $B = 512$ bit AVX512 support.
 
+\matodo{Add discussion how challenges relate to this toy project.}
+
 Our code is provided at \url{TODO}. For the scope of this paper, we consider the \emph{support code} that takes care of handling the setup as the main contribution.  
 
 \section{Approaches to experimental evaluation}
@@ -216,6 +218,8 @@ In the following, each dimension will be introduced with general guidelines and 
 \subsection{Version everything}
 \subsection{Manage the experimental results thoughtfully}
 \subsection{Don't repeat yourself}
+
+\section{Case Study Evaluation}
 
 \section{Conclusions}
 
@@ -315,7 +319,7 @@ Here follows the \emph{keys for a successful experimental evaluation}
   that are no longer needed.
 \item Annotate datasets with meta-data necessary in the evaluation (such as workloads and `true' answers to workloads) 
 \item Must be possible to create all datasets locally, but those versions should be shared. Can be shared via public http/S3.
-\item Always have a small dataset of random data that can be created in a few seconds.
+\item Always have a small dataset (of random data) that can be created in a few seconds to use for debugging and continuous integration.
 \end{itemize}
 
 \paragraph{The code}
