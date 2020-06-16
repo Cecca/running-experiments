@@ -26,4 +26,5 @@ jobs:
         cd code && ./dockerrun make
         ./dockerrun ./demo --dataset random-xs-20-angular
         ./dockerrun python3 run_yaml.py ./demo experiments/ci.yaml
-        ./dockerrun python3 report.py
+        ./dockerrun python3 evaluation/report.py
+        ./dockerrun jupyter nbconvert --to html --execute evaluation/evaluation.ipynb 
