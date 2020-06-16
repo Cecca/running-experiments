@@ -58,6 +58,12 @@ is often crafted by the same people carrying out the analysis.
 This has the advantage that the insights obtained from preliminary
 investigations of early versions of an algorithm can be used to improve the
 algorithm itself.
+In fact, as also noted by Moret and Shapiro~\cite{DBLP:journals/jucs/MoretS01},
+the understanding required for an implementation may uncover features of the
+algorithms that would otherwise go unnoticed.
+Furthermore, the analysis of experimental results about algorithms can give
+insights about aspects that are not easily described by theoretical
+models of computation~\cite{DBLP:journals/cacm/McGeoch07}.
 At the same time, this feedback-based process leads to the quick
 accumulation of obsolete data, referring to old versions of the
 algorithms and their implementations.
@@ -67,6 +73,7 @@ however requires some care in practice.
 In fact, oftentimes a study involves different algorithms and datasets,
 each evolving at a different pace: weeks-old results might be up to date
 for one algorithm, and obsolete for another.
+
 
 As we shall see, the literature is mainly concerned with the design 
 and analysis of
@@ -95,79 +102,51 @@ retrieving the most up-to date result for each configuration to do the final
 analysis.}
 
 
-
 \section{Related work}
 
-\subsection{Experimental algorithmics}
+Previous works focused mainly on two areas: the design of experiments,
+and reproducible research.
 
-McGeoch and Moret~\cite{DBLP:journals/sigact/McGeochM99} give advice on how
-to present experimental result, but don't describe how to run the experiments
-themselves.
-Sanders~\cite{DBLP:conf/dagstuhl/Sanders00} describes how to report results
-in papers.
-
-The book by McGeoch~\cite{DBLP:reference/algo/McGeoch08} describes a methodology
-for running experiments.
-
-Have a look at~\cite{DBLP:journals/jucs/MoretS01} and~\cite{DBLP:conf/dimacs/Moret99}.
-
-There is a 2010 book~\cite{DBLP:books/sp/2010BCPP}.
-
-Also read~\cite{DBLP:series/ncs/Bartz-BeielsteinP14}.
-
-From McGeoch~\cite{DBLP:journals/cacm/McGeoch07} we have a motivation for complex
-experimental analyses:
-\begin{center}
-\begin{minipage}{0.8\textwidth}
-  In addition, in the past few decades, experimental methodology in this
-  context has evolved into some-thing resembling a classic “laboratory
-  experiment” for analyzing algorithms. This approach emphasizes highly
-  controlled parameters, carefully placed data-collection probes, and
-  sophisticated data analysis.Rather than simply measure performance, the
-  goal of the experiment is to generalize away from context-specific
-  measurements and build insight into fundamental structures and properties.
-
-  Indeed, since experiments can be used to measure any aspect of
-  algorithm/program performance, not just CPU times, this approach can
-  stimulate new forms of interplay between theory and practice. The term
-  “experimental algorithmics” describes this new approach to algorithm design
-  and analysis, combining theoretical questions and motivations with
-  empirical research methods. The related term “algorithm engineering” is
-  almost synonymous but emphasizes design over analysis.
-\end{minipage}
-\end{center}
-
-There has been a Dagstuhl seminar on the topic of 
-experimental evaluation~\cite{DBLP:conf/dagstuhl/2000ea}.
-
-Demetrescu et al.~\cite{DBLP:conf/dagstuhl/DemetrescuFIN00} worked on
-the topic of visualizing experimental results in experimental algorithmics.
-
-Bartz-Beielstein~\cite{DBLP:reference/sp/Bartz-Beielstein15} discusses
+Moret and Shapiro~\cite{DBLP:journals/jucs/MoretS01} advocate for the
+importance of complementing the theoretical analysis of algorithms
+with their implementation.
+McGeoch~\cite{DBLP:reference/algo/McGeoch08} gives several guidelines on how to
+design and carry out experimental analyses of algorithms.
+The book~\cite{DBLP:books/sp/2010BCPP} collects several contributions
+on the characterization and analysis of algorithm performance.
+Earlier, a Dagstuhl seminar has been devoted to the discussion of the
+experimental evaluation of algorithms~\cite{DBLP:conf/dagstuhl/2000ea}.
+More recently, a structured approach to the design and evaluation
+of experiments has been discussed in~\cite{DBLP:series/ncs/Bartz-BeielsteinP14}.
+%
+Experimental studies can be influenced by contingent aspects
+of the evaluation:
+Bartz and Beielstein~\cite{DBLP:reference/sp/Bartz-Beielstein15} discuss
 the issue of generalizing the conclusions of experimental studies.
+%
+McGeoch and Moret~\cite{DBLP:journals/sigact/McGeochM99} and Sanders~\cite{DBLP:conf/dagstuhl/Sanders00}
+focus on the reporting of experimental results.
 
-\subsection{Reproducibility}
+In recent years there has been a discussion about the lack of reproducibility
+of research findings in several areas, including 
+computer science~\cite{DBLP:journals/cacm/CollbergP16,Hutson725}.
+Much effort has been devoted to finding a solution to this issue. Several
+contributions have been collected in~\cite{stodden2014implementing} 
+and~\cite{kitzes2017practice}.
+Among the tools to support reproducible research, 
+VisTrails~\cite{DBLP:conf/sigmod/CallahanFSSSV06} allows to
+explicitly define reproducible workflows.
+\texttt{knitr} and \texttt{Jupyter} take a \emph{literate programming}
+approach, allowing experiment's code, analysis, and text to be interleaved
+in a single "executable" document.
+To solve the issues deriving from software dependencies,
+some tools aim at capturing the execution
+environment at runtime~\cite{DBLP:journals/cse/Guo12,davison2014sumatra,DBLP:journals/jossw/RampinCSFS16},
+while others such as Docker~\cite{DBLP:journals/sigops/Boettiger15}
+and Singularity~\cite{kurtzer2017singularity} follow a \emph{declarative}
+approach, where the description of the execution environment is part
+of the code base
 
-In this book~\cite{stodden2014implementing}, techniques for reproducible
-research in computational fields are described.
-A more recent book~\cite{kitzes2017practice} focuses on describing a series
-of case studies in reproducibility.
-
-All the works like Sumatra~\cite{davison2014sumatra}, ReproZip, docker, that capture the environment for
-replicability.
-
-Boettiger~\cite{DBLP:journals/sigops/Boettiger15} describes how to use Docker~\cite{DBLP:journals/cloudcomp/Bernstein14b}
-to build reproducible software packages. This is the approach taken
-in the case study described in this paper. They also compare the two different
-approaches of tools capturing provenance and the virtual machine approach.
-He advocates for using Docker from the onset of a project, so to start development
-inside containers.
-
-\texttt{pypet}~\cite{DBLP:journals/fini/MeyerO16}
-
-Then there are the tools for literate programming.
-
-Could cite~\cite{arango2017performance} for container-based performance observations.
 
 \section{Challenges in running large scale experimental evaluation}
 
