@@ -230,39 +230,27 @@ In the following, each dimension will be introduced with general guidelines and 
   \caption{Dimensions for running large-scale experimental evaluations.}
   \label{fig:discussion}
 \end{figure}
+
 \subsection{Manage the datasets and workloads efficiently}
-\subsection{Manage the experimental configurations clearly}
-\subsection{Version everything}
-\subsection{Manage the experimental results thoughtfully}
-\subsection{Don't repeat yourself}
-
-\section{Conclusions}
-
-\bibliographystyle{alpha}
-\bibliography{references}
-
-\appendix
-
-\section{Notes}
-
-Here follows the \emph{keys for a successful experimental evaluation}
-
-\paragraph{Manage the experimental results thoughtfully}
 
 \begin{itemize}
-\item Collect everything you need, but nothing more: it's expensive to process too
-  much data you don't need
-\item Implement a mechanism to keep track of only the latest version of an
-  experiment. This is crucial to be able to re-run parameter configurations
-  without being worried that some old results are sneaking in. You may also
-  need some mechanism to clean up old configurations (and then also some
-  mechanism to back up)
-\item Keep the analysis efficient (use tools like make)
-\item Using a database helps managing changes with database migrations.
-\item Maybe: Clear connection between an experimental result and the experimental configuration that ran this experiment?
+\item \emph{No manual downloading and preprocessing}. At the very minimum, you want a
+  script to download and preprocess your data for you
+\item In my experience, `bash` quickly becomes very tangled, and `python` is a mess
+  to set up if you have to move on a new machine. Embedding the preprocessing
+  (and downloading) code in the experiment's code is the best way to go. You
+  get a single development environment to set up, a single entry point for the
+  experiments (no need to run a script to preprocess and distribute data as a
+  separate step).
+\item There should be a command to list all available datasets, and remove the ones
+  that are no longer needed.
+\item Annotate datasets with meta-data necessary in the evaluation (such as workloads and `true' answers to workloads) 
+\item Must be possible to create all datasets locally, but those versions should be shared. Can be shared via public http/S3.
+\item Always have a small dataset of random data that can be created in a few seconds.
 \end{itemize}
 
-\paragraph{Manage the experimental configurations sanely}
+
+\subsection{Manage the experimental configurations clearly}
 
 \begin{itemize}
 \item Never run experiments from the command line, keep that for testing.
@@ -289,24 +277,7 @@ Here follows the \emph{keys for a successful experimental evaluation}
  \item Chronological ordering: Use YYMMDD-theme\_of\_experiment as file format.
 \end{itemize}
 
-\paragraph{Manage the datasets efficiently}
-
-\begin{itemize}
-\item \emph{No manual downloading and preprocessing}. At the very minimum, you want a
-  script to download and preprocess your data for you
-\item In my experience, `bash` quickly becomes very tangled, and `python` is a mess
-  to set up if you have to move on a new machine. Embedding the preprocessing
-  (and downloading) code in the experiment's code is the best way to go. You
-  get a single development environment to set up, a single entry point for the
-  experiments (no need to run a script to preprocess and distribute data as a
-  separate step).
-\item Maybe the datasets should be versioned?
-\item There should be a command to list all available datasets, and remove the ones
-  that are no longer needed.
-\item Annotate datasets with meta-data necessary in the evaluation (such as workloads and `true' answers to workloads) 
-\item Must be possible to create all datasets locally, but those versions should be shared. Can be shared via public http/S3.
-\item Always have a small dataset of random data that can be created in a few seconds.
-\end{itemize}
+\subsection{Infrastructure management}
 
 \paragraph{The code}
 
@@ -337,7 +308,7 @@ Your implementation will depend on many different environmental settings such as
   \item Use continuous integration to test all parts of the workflow
 \end{itemize}
 
-\paragraph{Version everything}
+\subsection{Version everything}
 
 Keeping the source code under version control might not be sufficient, since
 source code revisions (in isolation) lack semantic meaning: you cannot tell
@@ -359,6 +330,31 @@ one dataset was updated. Rather, we would like to re-run only those experiments 
 or the necessities are always the same.}
 For this purpose, using the git version of the code is not well suited to this, as it is
 shared between all the components.
+
+
+\subsection{Manage the experimental results thoughtfully}
+
+\begin{itemize}
+\item Collect everything you need, but nothing more: it's expensive to process too
+  much data you don't need
+\item Implement a mechanism to keep track of only the latest version of an
+  experiment. This is crucial to be able to re-run parameter configurations
+  without being worried that some old results are sneaking in. You may also
+  need some mechanism to clean up old configurations (and then also some
+  mechanism to back up)
+\item Keep the analysis efficient (use tools like make)
+\item Using a database helps managing changes with database migrations.
+\item Maybe: Clear connection between an experimental result and the experimental configuration that ran this experiment?
+\end{itemize}
+
+\subsection{Don't repeat yourself}
+
+\section{Conclusions}
+
+\bibliographystyle{alpha}
+\bibliography{references}
+
+\appendix
 
 \section{Review: 1-bit sketches via SimHash}
 \label{app:sketches}
