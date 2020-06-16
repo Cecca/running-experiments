@@ -15,12 +15,13 @@ using namespace toy_project;
 void show_usage(std::string name) {
 
     std::cerr << "Usage: " << name << " [OPTIONS]\n"
-              << "\t--list_datasets List available datasets\n"
-              << "\t--list_methods List available methods\n"
               << "\t--dataset NAME\n"
+              << "\t--experiment-file Name of experiment file"
+              << "\t--force Run even if result exists\n"
               << "\t--help Displays this text\n"
+//              << "\t--list_datasets List available datasets\n"
+//              << "\t--list_methods List available methods\n"
               << "\t--method simple | avx2 | avx512\n"
-              << "\t--force Overwrite run if it's present\n"
               << std::endl;
 }
 
@@ -107,10 +108,11 @@ int main(int argc, char **argv) {
   std::string dataset_name = "fashion-mnist-784-euclidean";
   std::string method = "simple";
   std::string storage = "float_aligned";
+  std::string experiment_fn = "not provided";
   bool filter = false;
   bool force = false;
-
   float recall = 0.5f;
+  uint64_t seed = 4132;
 
   for (int i=1; i < argc; i++) {
       std::string arg = argv[i];
@@ -138,6 +140,16 @@ int main(int argc, char **argv) {
               recall = atof(argv[++i]);
           }
       }
+      if (arg == "--experiment-file") {
+        if (i+1 < argc) {
+            experiment_fn = argv[++i];
+        }
+      }
+      if (arg == "--seed") {
+        if (i+1 < argc) {
+            seed = atoll(argv[++i]);
+        }
+      }
       if (arg == "--force") {
           force = true;
       }
@@ -161,8 +173,9 @@ int main(int argc, char **argv) {
   // group at the top level.
   //
   // With this information, C++ reads the dataset from HDF5.
-  auto datasets = load(dataset_name);
-  if (!force && contains_result(dataset_name, 1, "bruteforce", ALGO_VERSION, run_identifier.str())) {
+  auto datasets = load(dataset_name, seed);
+  if (!force && contains_result(dataset_name, 1, "bruteforce", 
+                                ALGO_VERSION, seed, run_identifier.str())) {
       std::cout << "Experiment already carried out -- skipping" << std::endl;
       return 0;
   }
@@ -204,7 +217,8 @@ int main(int argc, char **argv) {
       return 2;
   }
 
-  record_result(dataset_name, 1, "bruteforce", ALGO_VERSION, run_identifier.str(), res.first, res.second);
+  record_result(dataset_name, 1, "bruteforce", ALGO_VERSION, 
+    run_identifier.str(), experiment_fn, seed, res.first, res.second);
 
   return 0;
 }

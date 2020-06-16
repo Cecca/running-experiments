@@ -56,10 +56,10 @@ class Dataset {
     }
 };
 
-DatasetConfig dataset_path(std::string name) {
+DatasetConfig dataset_path(std::string name, uint64_t seed) {
     // Make the path of the python script relative to the directory
     std::stringstream sstr;
-    sstr << "python3 ./datasets.py " << name;
+    sstr << "python3 ./datasets.py --seed "<< seed << " " << name;
     std::string command_output = exec(sstr.str().c_str());
     std::stringstream csstr(command_output);
     DatasetConfig config;
@@ -68,9 +68,9 @@ DatasetConfig dataset_path(std::string name) {
     return config;
 }
 
-std::pair<Dataset, Dataset> load(std::string name) {
+std::pair<Dataset, Dataset> load(std::string name, uint64_t seed) {
 
-    DatasetConfig conf = dataset_path(name);
+    DatasetConfig conf = dataset_path(name, seed);
     std::stringstream sstr;
     sstr << conf.version;
 

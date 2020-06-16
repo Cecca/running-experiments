@@ -100,6 +100,18 @@ int db_setup() {
     bump.exec();
   }
   case 3: {
+    sqlite::Statement add_column_seed(conn, 
+            "ALTER TABLE results_raw ADD COLUMN seed INT64 DEFAULT 0;");
+    add_column_seed.exec();
+
+    sqlite::Statement add_column_experiment_fn(conn, 
+            "ALTER TABLE results_raw ADD COLUMN experiment_file TEXT DEFAULT \"not provided\";");
+    add_column_experiment_fn.exec();
+
+    sqlite::Statement bump(conn, "PRAGMA user_version = 3");
+    bump.exec();
+  }
+  case 4: {
     std::cout << "results database schema up to date" << std::endl;
     break;
   }
@@ -114,7 +126,7 @@ int db_setup() {
 
 bool contains_result(std::string dataset, int dataset_version,
                    std::string algorithm, int algorithm_version,
-                   std::string parameters) {
+                   uint64_t seed, std::string parameters) {
   sqlite::Connection conn = db_connection();
   // We don't check for the GIT_REV, since a change in the git revision
   // might not imply a change in the dataset/algorithm version, hence
@@ -127,12 +139,14 @@ bool contains_result(std::string dataset, int dataset_version,
         " dataset_version = :dataset_version AND "
         " algorithm = :algorithm AND "
         " algorithm_version = :algorithm_version AND "
+        " seed = :seed AND "
         " parameters = :parameters;");
   stmt.bind_text(":hostname", get_hostname());
   stmt.bind_text(":dataset", dataset);
   stmt.bind_int(":dataset_version", dataset_version);
   stmt.bind_text(":algorithm", algorithm);
   stmt.bind_int(":algorithm_version", algorithm_version);
+  stmt.bind_int64(":seed", seed);
   stmt.bind_text(":parameters", parameters);
   stmt.exec();
 
@@ -141,7 +155,8 @@ bool contains_result(std::string dataset, int dataset_version,
 
 void record_result(std::string dataset, int dataset_version,
                    std::string algorithm, int algorithm_version,
-                   std::string parameters, uint64_t running_time_ns,
+                   std::string parameters, std::string experiment_file, 
+                   uint64_t seed, uint64_t running_time_ns,
                    std::vector<size_t> nearest_neighbors) {
   std::string hostname = get_hostname();
   std::string git_rev = GIT_REV;
@@ -156,9 +171,10 @@ void record_result(std::string dataset, int dataset_version,
       conn,
       "INSERT INTO results_raw"
       "  (sha, git_rev, hostname, date, dataset, dataset_version, algorithm, algorithm_version, "
-      "   parameters, running_time_ns)"
-      "VALUES (:sha, :git_rev, :hostname, :date, :dataset, :dataset_version, :algorithm, "
-      "        :algorithm_version, :parameters, :running_time_ns);");
+      "   experiment_file, seed, parameters, running_time_ns)"
+      "VALUES (:sha, :git_rev, :hostname, :date, :dataset, :dataset_version, "
+      "        :algorithm, :algorithm_version, "
+      "        :experiment_file, :seed, :parameters, :running_time_ns);");
 
   stmt.bind_text(":sha", sha);
   stmt.bind_text(":git_rev", git_rev);
@@ -168,7 +184,9 @@ void record_result(std::string dataset, int dataset_version,
   stmt.bind_int(":dataset_version", dataset_version);
   stmt.bind_text(":algorithm", algorithm);
   stmt.bind_int(":algorithm_version", algorithm_version);
+  stmt.bind_text(":experiment_file", experiment_file);
   stmt.bind_text(":parameters", parameters);
+  stmt.bind_int64(":seed", seed);
   stmt.bind_int64(":running_time_ns", running_time_ns);
   stmt.exec();
 

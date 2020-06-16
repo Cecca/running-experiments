@@ -1,0 +1,10 @@
+environment:
+    dataset: ['random-xs-20-angular']
+    seed: 4132
+    force: False
+experiments:
+    - name: baseline
+      storage: ['float_aligned', 'i16_aligned']
+      method: ['simple']
+
+

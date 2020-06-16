@@ -17,6 +17,10 @@ namespace toy_project {
         return generator;
     }
 
+    void set_seed(uint64_t seed) {
+        generator.seed(seed);
+    }
+
     #if defined(__GNUC__)
         #define popcountll __builtin_popcountll
     # elif defined(_MSC_VER)
