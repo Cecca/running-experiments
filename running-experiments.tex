@@ -84,12 +84,6 @@ tasks that have to be carried out in between those three tasks, and
 the approaches we developed to tackle the perils and frustrations of this 
 often menial work.
 
-\cetodo{Say that the basic need is to be able to access the experimental
-results to run the analysis, basically we need to connect the code running the
-experiments with the code carrying out the analysis.}
-\cetodo{Mention the rushed publication process, which prompts the need
-of not rerunning everything, together with the necessity of saving
-money/energy. Therefore we need to have a way of doing this reliably.}
 \cetodo{I would like to discuss an \emph{append only} workflow, where
 all past results are kept and are easily accessible, since many times
 we ask ourselves "I seem to remember that once we got that result".
@@ -121,7 +115,7 @@ of experiments has been discussed in~\cite{DBLP:series/ncs/Bartz-BeielsteinP14}.
 %
 Experimental studies can be influenced by contingent aspects
 of the evaluation:
-Bartz and Beielstein~\cite{DBLP:reference/sp/Bartz-Beielstein15} discuss
+Bartz-Beielstein~\cite{DBLP:reference/sp/Bartz-Beielstein15} discusses
 the issue of generalizing the conclusions of experimental studies.
 %
 McGeoch and Moret~\cite{DBLP:journals/sigact/McGeochM99} and Sanders~\cite{DBLP:conf/dagstuhl/Sanders00}
@@ -150,6 +144,52 @@ of the code base
 
 \section{Challenges in running large scale experimental evaluation}
 
+Typically, an experimental evaluation spans several weeks, if not months.
+During this time, the experiments being run have different meanings: early
+on, during the initial development, experiments are useful to find out the most
+appropriate parameter ranges, find bugs, and check assumptions; later on,
+experiments are devoted to the collection of the results of the study.
+This is not a process that proceeds linearly from start to finish. 
+Rather, the analysis of the results might prompt the modification of an algorithm
+or dataset, or the introduction of new algorithms and datasets into the study,
+followed by a new round of experiments.
+Together with the algorithms and the datasets, also the parameterizations and the
+quantities being measured are subject to evolution during the lifetime of a project.
+
+For the analysis to be sound, it is of paramount importance not to 
+mix results related to different versions
+of the algorithms and datasets.
+The simplest solution would be to re-run the entire experimental suite whenever
+something is modified. 
+This usually takes a very long time, and a change might affect 
+only a small part of the results, making this solution wasteful of time, energy,
+and computational resources.
+A potential solution might be to divide the experimental suite in smaller
+components, each investigating a particular aspect, re-running only those 
+affected by a change.
+While this works in the short term, as the experimental study progresses
+the subdivision of the experimental suite will evolve with it, leading to the
+need of re-arranging the results.
+On the other hand, manually re-running only parts of an experimental suite,
+while reusing results from old runs, requires much care in order to exclude
+obsolete results from the analysis, undermining the confidence in the soundness
+of the whole analysis.
+The situation worsens in the rushed final days preceding a submission:
+some last minute changes are made, there is no time to re-run all the experiments,
+the possibility of erroneously mixing results is very concrete.
+
+As for the analysis itself, it is usually executed on a machine different from the
+experimental code, using a different programming language.
+The input of the analysis is the set of results produced by the experimental suite,
+which is usually quite large due to the fact that many parameter combinations
+need to be evaluated.
+While the analysis code may not need the computational resourced of the 
+experimental code, it still needs to execute reasonably fast, in order to be able
+to examine the results interactively.
+This implies that the results produced by the experiments need to be 
+stored in a convenient
+format that is at the same time easily manageable, convenient to transfer between
+machines, and efficient to access.
 
 
 \section{Case study: Engineering a Linear Scan}
@@ -204,35 +244,6 @@ In the following, each dimension will be introduced with general guidelines and 
 \appendix
 
 \section{Notes}
-
-There are several challenges when running large experimental suites
-for the evaluation of algorithms.
-
-\begin{itemize}
-\item Oftentimes the algorithm is modified in response to the results
-  of the experimental study. It is important not to mix results from
-  different algorithms, and from different code implementations of the
-  same algorithm.
-\item Usually running the experiments takes a long time, and we don't
-  want to re-run all the experiments every time. However, when
-  re-using results from old experiments, we need to be sure that we
-  are not including undesired and obsolete results.
-\item There are two types of experiments: the ones you do during the
-  development of the code, which are useful to find out the most
-  appropriate parameter ranges, shake out bugs, check assumptions,
-  etc; The second kind of experiments is instead devoted to the
-  collection of the results of the study. This means that experiments
-  are run over a long span of time. It is very important that results
-  obtained with different code versions are not mixed.
-\item An experiment is run multiple times with the same parameter
-  configuration (including the random seed), but only the most recent
-  one is interesting.
-\item Experiments are run on a machine (or cluster of machines) and then
-  analyzed in another.
-\item There are \emph{many} experiemnts.
-\item The analysis is carried out with different tools (python, R) and
-  should run reasonably efficiently
-\end{itemize}
 
 Here follows the \emph{keys for a successful experimental evaluation}
 
