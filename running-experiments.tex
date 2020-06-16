@@ -58,6 +58,12 @@ is often crafted by the same people carrying out the analysis.
 This has the advantage that the insights obtained from preliminary
 investigations of early versions of an algorithm can be used to improve the
 algorithm itself.
+In fact, as also noted by Moret and Shapiro~\cite{DBLP:journals/jucs/MoretS01},
+the understanding required for an implementation may uncover features of the
+algorithms that would otherwise go unnoticed.
+Furthermore, the analysis of experimental results about algorithms can give
+insights about aspects that are not easily described by theoretical
+models of computation~\cite{DBLP:journals/cacm/McGeoch07}.
 At the same time, this feedback-based process leads to the quick
 accumulation of obsolete data, referring to old versions of the
 algorithms and their implementations.
@@ -68,6 +74,7 @@ In fact, oftentimes a study involves different algorithms and datasets,
 each evolving at a different pace: weeks-old results might be up to date
 for one algorithm, and obsolete for another.
 
+
 As we shall see, the literature is mainly concerned with the design 
 and analysis of
 experiments, with the communication of the results,
@@ -77,12 +84,6 @@ tasks that have to be carried out in between those three tasks, and
 the approaches we developed to tackle the perils and frustrations of this 
 often menial work.
 
-\cetodo{Say that the basic need is to be able to access the experimental
-results to run the analysis, basically we need to connect the code running the
-experiments with the code carrying out the analysis.}
-\cetodo{Mention the rushed publication process, which prompts the need
-of not rerunning everything, together with the necessity of saving
-money/energy. Therefore we need to have a way of doing this reliably.}
 \cetodo{I would like to discuss an \emph{append only} workflow, where
 all past results are kept and are easily accessible, since many times
 we ask ourselves "I seem to remember that once we got that result".
@@ -95,82 +96,100 @@ retrieving the most up-to date result for each configuration to do the final
 analysis.}
 
 
-
 \section{Related work}
 
-\subsection{Experimental algorithmics}
+Previous works focused mainly on two areas: the design of experiments,
+and reproducible research.
 
-McGeoch and Moret~\cite{DBLP:journals/sigact/McGeochM99} give advice on how
-to present experimental result, but don't describe how to run the experiments
-themselves.
-Sanders~\cite{DBLP:conf/dagstuhl/Sanders00} describes how to report results
-in papers.
-
-The book by McGeoch~\cite{DBLP:reference/algo/McGeoch08} describes a methodology
-for running experiments.
-
-Have a look at~\cite{DBLP:journals/jucs/MoretS01} and~\cite{DBLP:conf/dimacs/Moret99}.
-
-There is a 2010 book~\cite{DBLP:books/sp/2010BCPP}.
-
-Also read~\cite{DBLP:series/ncs/Bartz-BeielsteinP14}.
-
-From McGeoch~\cite{DBLP:journals/cacm/McGeoch07} we have a motivation for complex
-experimental analyses:
-\begin{center}
-\begin{minipage}{0.8\textwidth}
-  In addition, in the past few decades, experimental methodology in this
-  context has evolved into some-thing resembling a classic “laboratory
-  experiment” for analyzing algorithms. This approach emphasizes highly
-  controlled parameters, carefully placed data-collection probes, and
-  sophisticated data analysis.Rather than simply measure performance, the
-  goal of the experiment is to generalize away from context-specific
-  measurements and build insight into fundamental structures and properties.
-
-  Indeed, since experiments can be used to measure any aspect of
-  algorithm/program performance, not just CPU times, this approach can
-  stimulate new forms of interplay between theory and practice. The term
-  “experimental algorithmics” describes this new approach to algorithm design
-  and analysis, combining theoretical questions and motivations with
-  empirical research methods. The related term “algorithm engineering” is
-  almost synonymous but emphasizes design over analysis.
-\end{minipage}
-\end{center}
-
-There has been a Dagstuhl seminar on the topic of 
-experimental evaluation~\cite{DBLP:conf/dagstuhl/2000ea}.
-
-Demetrescu et al.~\cite{DBLP:conf/dagstuhl/DemetrescuFIN00} worked on
-the topic of visualizing experimental results in experimental algorithmics.
-
+Moret and Shapiro~\cite{DBLP:journals/jucs/MoretS01} advocate for the
+importance of complementing the theoretical analysis of algorithms
+with their implementation.
+McGeoch~\cite{DBLP:reference/algo/McGeoch08} gives several guidelines on how to
+design and carry out experimental analyses of algorithms.
+The book~\cite{DBLP:books/sp/2010BCPP} collects several contributions
+on the characterization and analysis of algorithm performance.
+Earlier, a Dagstuhl seminar has been devoted to the discussion of the
+experimental evaluation of algorithms~\cite{DBLP:conf/dagstuhl/2000ea}.
+More recently, a structured approach to the design and evaluation
+of experiments has been discussed in~\cite{DBLP:series/ncs/Bartz-BeielsteinP14}.
+%
+Experimental studies can be influenced by contingent aspects
+of the evaluation:
 Bartz-Beielstein~\cite{DBLP:reference/sp/Bartz-Beielstein15} discusses
 the issue of generalizing the conclusions of experimental studies.
+%
+McGeoch and Moret~\cite{DBLP:journals/sigact/McGeochM99} and Sanders~\cite{DBLP:conf/dagstuhl/Sanders00}
+focus on the reporting of experimental results.
 
-\subsection{Reproducibility}
+In recent years there has been a discussion about the lack of reproducibility
+of research findings in several areas, including 
+computer science~\cite{DBLP:journals/cacm/CollbergP16,Hutson725}.
+Much effort has been devoted to finding a solution to this issue. Several
+contributions have been collected in~\cite{stodden2014implementing} 
+and~\cite{kitzes2017practice}.
+Among the tools to support reproducible research, 
+VisTrails~\cite{DBLP:conf/sigmod/CallahanFSSSV06} allows to
+explicitly define reproducible workflows.
+\texttt{knitr} and \texttt{Jupyter} take a \emph{literate programming}
+approach, allowing experiment's code, analysis, and text to be interleaved
+in a single "executable" document.
+To solve the issues deriving from software dependencies,
+some tools aim at capturing the execution
+environment at runtime~\cite{DBLP:journals/cse/Guo12,davison2014sumatra,DBLP:journals/jossw/RampinCSFS16},
+while others such as Docker~\cite{DBLP:journals/sigops/Boettiger15}
+and Singularity~\cite{kurtzer2017singularity} follow a \emph{declarative}
+approach, where the description of the execution environment is part
+of the code base
 
-In this book~\cite{stodden2014implementing}, techniques for reproducible
-research in computational fields are described.
-A more recent book~\cite{kitzes2017practice} focuses on describing a series
-of case studies in reproducibility.
-
-All the works like Sumatra~\cite{davison2014sumatra}, ReproZip, docker, that capture the environment for
-replicability.
-
-Boettiger~\cite{DBLP:journals/sigops/Boettiger15} describes how to use Docker~\cite{DBLP:journals/cloudcomp/Bernstein14b}
-to build reproducible software packages. This is the approach taken
-in the case study described in this paper. They also compare the two different
-approaches of tools capturing provenance and the virtual machine approach.
-He advocates for using Docker from the onset of a project, so to start development
-inside containers.
-
-\texttt{pypet}~\cite{DBLP:journals/fini/MeyerO16}
-
-Then there are the tools for literate programming.
-
-Could cite~\cite{arango2017performance} for container-based performance observations.
 
 \section{Challenges in running large scale experimental evaluation}
 
+Typically, an experimental evaluation spans several weeks, if not months.
+During this time, the experiments being run have different meanings: early
+on, during the initial development, experiments are useful to find out the most
+appropriate parameter ranges, find bugs, and check assumptions; later on,
+experiments are devoted to the collection of the results of the study.
+This is not a process that proceeds linearly from start to finish. 
+Rather, the analysis of the results might prompt the modification of an algorithm
+or dataset, or the introduction of new algorithms and datasets into the study,
+followed by a new round of experiments.
+Together with the algorithms and the datasets, also the parameterizations and the
+quantities being measured are subject to evolution during the lifetime of a project.
+
+For the analysis to be sound, it is of paramount importance not to 
+mix results related to different versions
+of the algorithms and datasets.
+The simplest solution would be to re-run the entire experimental suite whenever
+something is modified. 
+This usually takes a very long time, and a change might affect 
+only a small part of the results, making this solution wasteful of time, energy,
+and computational resources.
+A potential solution might be to divide the experimental suite in smaller
+components, each investigating a particular aspect, re-running only those 
+affected by a change.
+While this works in the short term, as the experimental study progresses
+the subdivision of the experimental suite will evolve with it, leading to the
+need of re-arranging the results.
+On the other hand, manually re-running only parts of an experimental suite,
+while reusing results from old runs, requires much care in order to exclude
+obsolete results from the analysis, undermining the confidence in the soundness
+of the whole analysis.
+The situation worsens in the rushed final days preceding a submission:
+some last minute changes are made, there is no time to re-run all the experiments,
+the possibility of erroneously mixing results is very concrete.
+
+As for the analysis itself, it is usually executed on a machine different from the
+experimental code, using a different programming language.
+The input of the analysis is the set of results produced by the experimental suite,
+which is usually quite large due to the fact that many parameter combinations
+need to be evaluated.
+While the analysis code may not need the computational resourced of the 
+experimental code, it still needs to execute reasonably fast, in order to be able
+to examine the results interactively.
+This implies that the results produced by the experiments need to be 
+stored in a convenient
+format that is at the same time easily manageable, convenient to transfer between
+machines, and efficient to access.
 
 
 \section{Case study: Engineering a Linear Scan}
@@ -213,70 +232,27 @@ In the following, each dimension will be introduced with general guidelines and 
   \caption{Dimensions for running large-scale experimental evaluations.}
   \label{fig:discussion}
 \end{figure}
+
 \subsection{Manage the datasets and workloads efficiently}
+
+\begin{itemize}
+\item \emph{No manual downloading and preprocessing}. At the very minimum, you want a
+  script to download and preprocess your data for you
+\item In my experience, `bash` quickly becomes very tangled, and `python` is a mess
+  to set up if you have to move on a new machine. Embedding the preprocessing
+  (and downloading) code in the experiment's code is the best way to go. You
+  get a single development environment to set up, a single entry point for the
+  experiments (no need to run a script to preprocess and distribute data as a
+  separate step).
+\item There should be a command to list all available datasets, and remove the ones
+  that are no longer needed.
+\item Annotate datasets with meta-data necessary in the evaluation (such as workloads and `true' answers to workloads) 
+\item Must be possible to create all datasets locally, but those versions should be shared. Can be shared via public http/S3.
+\item Always have a small dataset of random data that can be created in a few seconds.
+\end{itemize}
+
+
 \subsection{Manage the experimental configurations clearly}
-\subsection{Version everything}
-\subsection{Manage the experimental results thoughtfully}
-\subsection{Don't repeat yourself}
-
-\section{Case Study Evaluation}
-
-\section{Conclusions}
-
-\bibliographystyle{alpha}
-\bibliography{references}
-
-\appendix
-
-\section{Notes}
-
-There are several challenges when running large experimental suites
-for the evaluation of algorithms.
-
-\begin{itemize}
-\item Oftentimes the algorithm is modified in response to the results
-  of the experimental study. It is important not to mix results from
-  different algorithms, and from different code implementations of the
-  same algorithm.
-\item Usually running the experiments takes a long time, and we don't
-  want to re-run all the experiments every time. However, when
-  re-using results from old experiments, we need to be sure that we
-  are not including undesired and obsolete results.
-\item There are two types of experiments: the ones you do during the
-  development of the code, which are useful to find out the most
-  appropriate parameter ranges, shake out bugs, check assumptions,
-  etc; The second kind of experiments is instead devoted to the
-  collection of the results of the study. This means that experiments
-  are run over a long span of time. It is very important that results
-  obtained with different code versions are not mixed.
-\item An experiment is run multiple times with the same parameter
-  configuration (including the random seed), but only the most recent
-  one is interesting.
-\item Experiments are run on a machine (or cluster of machines) and then
-  analyzed in another.
-\item There are \emph{many} experiemnts.
-\item The analysis is carried out with different tools (python, R) and
-  should run reasonably efficiently
-\end{itemize}
-
-Here follows the \emph{keys for a successful experimental evaluation}
-
-\paragraph{Manage the experimental results thoughtfully}
-
-\begin{itemize}
-\item Collect everything you need, but nothing more: it's expensive to process too
-  much data you don't need
-\item Implement a mechanism to keep track of only the latest version of an
-  experiment. This is crucial to be able to re-run parameter configurations
-  without being worried that some old results are sneaking in. You may also
-  need some mechanism to clean up old configurations (and then also some
-  mechanism to back up)
-\item Keep the analysis efficient (use tools like make)
-\item Using a database helps managing changes with database migrations.
-\item Maybe: Clear connection between an experimental result and the experimental configuration that ran this experiment?
-\end{itemize}
-
-\paragraph{Manage the experimental configurations sanely}
 
 \begin{itemize}
 \item Never run experiments from the command line, keep that for testing.
@@ -303,24 +279,7 @@ Here follows the \emph{keys for a successful experimental evaluation}
  \item Chronological ordering: Use YYMMDD-theme\_of\_experiment as file format.
 \end{itemize}
 
-\paragraph{Manage the datasets efficiently}
-
-\begin{itemize}
-\item \emph{No manual downloading and preprocessing}. At the very minimum, you want a
-  script to download and preprocess your data for you
-\item In my experience, `bash` quickly becomes very tangled, and `python` is a mess
-  to set up if you have to move on a new machine. Embedding the preprocessing
-  (and downloading) code in the experiment's code is the best way to go. You
-  get a single development environment to set up, a single entry point for the
-  experiments (no need to run a script to preprocess and distribute data as a
-  separate step).
-\item Maybe the datasets should be versioned?
-\item There should be a command to list all available datasets, and remove the ones
-  that are no longer needed.
-\item Annotate datasets with meta-data necessary in the evaluation (such as workloads and `true' answers to workloads) 
-\item Must be possible to create all datasets locally, but those versions should be shared. Can be shared via public http/S3.
-\item Always have a small dataset (of random data) that can be created in a few seconds to use for debugging and continuous integration.
-\end{itemize}
+\subsection{Infrastructure management}
 
 \paragraph{The code}
 
@@ -351,7 +310,7 @@ Your implementation will depend on many different environmental settings such as
   \item Use continuous integration to test all parts of the workflow
 \end{itemize}
 
-\paragraph{Version everything}
+\subsection{Version everything}
 
 Keeping the source code under version control might not be sufficient, since
 source code revisions (in isolation) lack semantic meaning: you cannot tell
@@ -373,6 +332,31 @@ one dataset was updated. Rather, we would like to re-run only those experiments 
 or the necessities are always the same.}
 For this purpose, using the git version of the code is not well suited to this, as it is
 shared between all the components.
+
+
+\subsection{Manage the experimental results thoughtfully}
+
+\begin{itemize}
+\item Collect everything you need, but nothing more: it's expensive to process too
+  much data you don't need
+\item Implement a mechanism to keep track of only the latest version of an
+  experiment. This is crucial to be able to re-run parameter configurations
+  without being worried that some old results are sneaking in. You may also
+  need some mechanism to clean up old configurations (and then also some
+  mechanism to back up)
+\item Keep the analysis efficient (use tools like make)
+\item Using a database helps managing changes with database migrations.
+\item Maybe: Clear connection between an experimental result and the experimental configuration that ran this experiment?
+\end{itemize}
+
+\subsection{Don't repeat yourself}
+
+\section{Conclusions}
+
+\bibliographystyle{alpha}
+\bibliography{references}
+
+\appendix
 
 \section{Review: 1-bit sketches via SimHash}
 \label{app:sketches}
