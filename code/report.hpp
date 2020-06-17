@@ -147,7 +147,13 @@ int db_setup() {
   return 0;
 }
 
-
+// Checks whether an experiment has already been run. The `Version` information
+// is used as follows. The `components` column reports which components are used
+// by the run (including the implementation of distance and the implementation
+// of storage): first we check against this column; if an experiment with the same
+// components has been run, we check the `version_*` columns, which report the
+// appropriate versions of the related component, with `0` meaning that the component
+// is not used.
 bool contains_result(std::string dataset, int dataset_version,
                    std::string algorithm,
                    Version version,
