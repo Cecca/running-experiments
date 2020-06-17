@@ -146,9 +146,24 @@ of the code base
 
 
 \section{Challenges in running large scale experimental evaluation}
-\cetodo{Make an enumeration of challenges that can be referenced later}
+\begin{figure}[t]
+  \centering
+  \includegraphics[width=0.8\textwidth]{figs/experiment_scheme.png}
+  \caption{Overview of the different stages of an experimental challenges. Adapted from~\cite{DBLP:reference/algo/McGeoch08} by adding challenges to individual tasks and feedback loops.}
+  \label{fig:overview}
+\end{figure}
+We define the following challenges in the  evaluation of large-scale experiments:
+\begin{enumerate}
+  \item[(C1)] \textbf{Feedback Loops by Design.} The implementations and tools support the iterative nature of an experimental study.
+  \item[(C2)] \textbf{Economic Execution.} Exactly those experiments that change through code changes have to be re-run, but nothing else. 
+  Moreover, only the changing parts of the experimental evaluation should be recomputed.
+  \item[(C3)] \textbf{Versioning.} The ability to go back in time and compare old results to more recent ones, finding regression or bugs.
+  \item[(C4)] \textbf{Machine independence.} Code and tools are designed in a way that allow them to run in a general setting.
+\end{enumerate}
+%
+We will detail these challenges in the following. 
 
-Typically, an experimental evaluation spans several weeks, if not months.
+Typically, an experimental evaluation spans several weeks, if not months. An overview over a typical experimental evaluation is given in Figure~\ref{fig:overview}. 
 During this time, the experiments being run have different meanings: early
 on, during the initial development, experiments are useful to find out the most
 appropriate parameter ranges, find bugs, and check assumptions; later on,
@@ -158,16 +173,15 @@ Rather, the analysis of the results might prompt the modification of an algorith
 or dataset, or the introduction of new algorithms and datasets into the study,
 followed by a new round of experiments.
 Together with the algorithms and the datasets, also the parameterizations and the
-quantities being measured are subject to evolution during the lifetime of a project.
+quantities being measured are subject to evolution during the lifetime of a project (C1).
 
 For the analysis to be sound, it is of paramount importance not to 
 mix results related to different versions
-of the algorithms and datasets.
+of the algorithms and datasets (C3), in particular when experiments are run on a set of different machines (C4). 
 The simplest solution would be to re-run the entire experimental suite whenever
 something is modified. 
 This usually takes a very long time, and a change might affect 
-only a small part of the results, making this solution wasteful of time, energy,
-and computational resources.
+only a small part of the results, making this solution wasteful of time, energy, computational resources and money if computing resources are rented (C2). 
 A potential solution might be to divide the experimental suite in smaller
 components, each investigating a particular aspect, re-running only those 
 affected by a change.
@@ -180,10 +194,10 @@ obsolete results from the analysis, undermining the confidence in the soundness
 of the whole analysis.
 The situation worsens in the rushed final days preceding a submission:
 some last minute changes are made, there is no time to re-run all the experiments,
-the possibility of erroneously mixing results is very concrete.
+the possibility of erroneously mixing results is very concrete. Additionally, reviewers will often demand running a new set of experiments, reporting on some other quality measures, or experiments using different computer architectures (C2, C3, C4).
 
 As for the analysis itself, it is usually executed on a machine different from the
-experimental code, using a different programming language.
+experimental code, using a different programming language (C4).
 The input of the analysis is the set of results produced by the experimental suite,
 which is usually quite large due to the fact that many parameter combinations
 need to be evaluated.
@@ -193,7 +207,8 @@ to examine the results interactively.
 This implies that the results produced by the experiments need to be 
 stored in a convenient
 format that is at the same time easily manageable, convenient to transfer between
-machines, and efficient to access.
+machines, and efficient to access (C2, C4).
+
 
 
 \section{Case study: Engineering a Linear Scan}
