@@ -163,6 +163,14 @@ int main(int argc, char **argv) {
       run_identifier << "filter=true;recall=" << recall << ";";
   }
   Version version = get_version(filter, method, storage);
+  std::cout 
+    << "Version information"
+    << "\n  components: " << version.components
+    << "\n  brute_force: " << version.brute_force
+    << "\n  filter: " << version.filter
+    << "\n  storage: " << version.storage
+    << "\n  distance: " << version.distance
+    << std::endl;
 
   // Datasets are loaded _by name_, not by filename!
   // It works as follows: the C++ calls Python and reads its

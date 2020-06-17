@@ -1,9 +1,11 @@
 #pragma once
 
+#include <iostream>
+
 // This is kept just for backwards compatibility
 #define ALGO_VERSION 4
 
-#define VERSION_BRUTE_FORCE                4
+#define VERSION_BRUTE_FORCE                1
 #define VERSION_FILTER                     1
 
 #define VERSION_DOT_PRODUCT_i16_avx2       1
@@ -41,30 +43,34 @@ Version get_version(bool filter, std::string method, std::string storage) {
     sstr << storage << "_" << method;
     ver.components = sstr.str();
 
-    if (storage.compare("float_aligned")) {
+    if (storage.compare("float_aligned") == 0) {
         ver.storage = VERSION_STORAGE_FLOAT_ALIGNED;
-    } else if (storage.compare("i16_aligned")) {
+    } else if (storage.compare("i16_aligned") == 0) {
         ver.storage = VERSION_STORAGE_I16_ALIGNED;
+    } else {
+        throw std::runtime_error("unknown storage");
     }
 
-    if (method.compare("simple")) {
-        if (storage.compare("float_aligned")) {
+    if (method.compare("simple") == 0) {
+        if (storage.compare("float_aligned") == 0) {
             ver.distance = VERSION_DOT_PRODUCT_float_simple;
-        } else if (storage.compare("i16_aligned")) {
+        } else if (storage.compare("i16_aligned") == 0) {
             ver.distance = VERSION_DOT_PRODUCT_i16_simple;
         }
-    } else if (method.compare("avx512")) {
-        if (storage.compare("float_aligned")) {
+    } else if (method.compare("avx512") == 0) {
+        if (storage.compare("float_aligned") == 0) {
             ver.distance = VERSION_DOT_PRODUCT_float_avx512;
-        } else if (storage.compare("i16_aligned")) {
+        } else if (storage.compare("i16_aligned") == 0) {
             ver.distance = VERSION_DOT_PRODUCT_i16_avx512;
         }
-    } else if (method.compare("avx2")) {
-        if (storage.compare("float_aligned")) {
+    } else if (method.compare("avx2") == 0) {
+        if (storage.compare("float_aligned") == 0) {
             ver.distance = VERSION_DOT_PRODUCT_float_avx2;
-        } else if (storage.compare("i16_aligned")) {
+        } else if (storage.compare("i16_aligned") == 0) {
             ver.distance = VERSION_DOT_PRODUCT_i16_avx2;
         }
+    } else {
+        throw std::runtime_error("unknown method");
     }
 
     return ver;

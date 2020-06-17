@@ -165,7 +165,6 @@ bool contains_result(std::string dataset, int dataset_version,
         " algorithm = :algorithm AND "
         " algorithm_version = :algorithm_version AND "
         " components = :components AND "
-        " brute_force_version = :brute_force_version AND "
         " version_brute_force = :version_brute_force AND "
         " version_filter = :version_filter AND "
         " version_distance = :version_distance AND "
@@ -210,11 +209,11 @@ void record_result(std::string dataset, int dataset_version,
       conn,
       "INSERT INTO results_raw"
       "  (sha, git_rev, hostname, date, dataset, dataset_version, algorithm, algorithm_version, "
-      "   components, version_brute_force, version_filter, version_storage, version_distance"
+      "   components, version_brute_force, version_filter, version_storage, version_distance, "
       "   experiment_file, seed, parameters, running_time_ns)"
       "VALUES (:sha, :git_rev, :hostname, :date, :dataset, :dataset_version, "
       "        :algorithm, :algorithm_version, "
-      "        :components, :version_brute_force, :version_filter, :version_storage, :version_distance"
+      "        :components, :version_brute_force, :version_filter, :version_storage, :version_distance, "
       "        :experiment_file, :seed, :parameters, :running_time_ns);");
 
   stmt.bind_text(":sha", sha);
