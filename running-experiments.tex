@@ -154,16 +154,17 @@ of the code base
 \end{figure}
 We define the following challenges in the  evaluation of large-scale experiments:
 \begin{enumerate}
-  \item[(C1)] \textbf{Feedback Loops by Design.} The implementations and tools support the iterative nature of an experimental study.
+  \item[(C1)] \textbf{Feedback Loops-by-Design.} The implementations and tools support the iterative nature of an experimental study.
   \item[(C2)] \textbf{Economic Execution.} Exactly those experiments that change through code changes have to be re-run, but nothing else. 
   Moreover, only the changing parts of the experimental evaluation should be recomputed.
-  \item[(C3)] \textbf{Versioning.} The ability to go back in time and compare old results to more recent ones, finding regression or bugs.
+  \item[(C3)] \textbf{Versioning.} The ability to go back in time and compare old results to more recent ones, finding regression or bugs. This requires an \emph{append-only} workflow.
   \item[(C4)] \textbf{Machine independence.} Code and tools are designed in a way that allow them to run in a general setting.
+  \item[(C5)] \textbf{Reproducibility-by-Design.} We strive for an automatic workflow that processes an experimental setup into resulting measurements used for evaluating the experiment. Results to be included into a publication should not require manual work to transform these measurements into tables and plots.
 \end{enumerate}
 %
 We will detail these challenges in the following. 
 
-Typically, an experimental evaluation spans several weeks, if not months. An overview over a typical experimental evaluation is given in Figure~\ref{fig:overview}. 
+Typically, an experimental evaluation spans several weeks, if not months. An overview of a typical experimental evaluation is given in Figure~\ref{fig:overview}. 
 During this time, the experiments being run have different meanings: early
 on, during the initial development, experiments are useful to find out the most
 appropriate parameter ranges, find bugs, and check assumptions; later on,
@@ -194,7 +195,7 @@ obsolete results from the analysis, undermining the confidence in the soundness
 of the whole analysis.
 The situation worsens in the rushed final days preceding a submission:
 some last minute changes are made, there is no time to re-run all the experiments,
-the possibility of erroneously mixing results is very concrete. Additionally, reviewers will often demand running a new set of experiments, reporting on some other quality measures, or experiments using different computer architectures (C2, C3, C4).
+the possibility of erroneously mixing results is very concrete. Additionally, reviewers will often demand running a new set of experiments, reporting on some other quality measures, or experimentation using different computer architectures (C2, C3, C4). \emph{Reproducibility-By-Design} (C5) requires that such wishes can be accomodated since the whole process from starting at an experimental design to a published table or figure is automated.
 
 As for the analysis itself, it is usually executed on a machine different from the
 experimental code, using a different programming language (C4).
@@ -357,8 +358,8 @@ shared between all the components.
 
 Some of the challenges we identified are related to the management of the results
 of the experiments themselves.
-Using a structured file format like CSV meets some of the requirements, like begin
-easy to produce and use and easily transferrable between machines.
+Using a structured file format like CSV meets some of the requirements, like being
+easy to produce and use, and easily transferrable between machines.
 However, being a text-based format makes its parsing is very expensive, and
 the entire dataset needs to be loaded in main memory at the beginning
 of the analysis, even when we are only interested in a subset of it.\footnote{
