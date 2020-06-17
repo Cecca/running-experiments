@@ -28,7 +28,7 @@ jobs:
         ./dockerrun python3 run_yaml.py ./demo experiments/ci.yaml
         ./dockerrun python3 evaluation/report.py
         ./dockerrun jupyter nbconvert --to html --execute evaluation/evaluation.ipynb 
-     - uses: actions/upload-artifact@v2
-       with:
+    - uses: actions/upload-artifact@v2
+      with:
         name: recall
         path: code/random-xs-20-angular-recall.png
