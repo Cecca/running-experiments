@@ -1,6 +1,9 @@
 #pragma once
 
-#define VERSION_BRUTE_FORCE                1
+// This is kept just for backwards compatibility
+#define ALGO_VERSION 4
+
+#define VERSION_BRUTE_FORCE                4
 #define VERSION_FILTER                     1
 
 #define VERSION_DOT_PRODUCT_i16_avx2       1
@@ -14,7 +17,8 @@
 #define VERSION_STORAGE_I16_ALIGNED        1
 
 struct Version {
-    std::string components_types;
+    std::string components;
+    uint32_t algo_version;
     uint32_t distance;
     uint32_t storage;
     uint32_t filter;
@@ -23,6 +27,7 @@ struct Version {
 
 Version get_version(bool filter, std::string method, std::string storage) {
     Version ver;
+    ver.algo_version = ALGO_VERSION;
     ver.brute_force = VERSION_BRUTE_FORCE;
 
     std::stringstream sstr;
@@ -34,7 +39,7 @@ Version get_version(bool filter, std::string method, std::string storage) {
         sstr << "nofilter_";
     }
     sstr << storage << "_" << method;
-    ver.components_types = sstr.str();
+    ver.components = sstr.str();
 
     if (storage.compare("float_aligned")) {
         ver.storage = VERSION_STORAGE_FLOAT_ALIGNED;

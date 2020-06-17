@@ -1,4 +1,5 @@
 #include <sstream>
+#include "version.hpp"
 #include "report.hpp"
 #include "datasets.hpp"
 #include "toy_project/vector_storage.hpp"
@@ -6,9 +7,7 @@
 #include "toy_project/distance.hpp"
 #include "toy_project/unit_vector.hpp"
 #include "toy_project/filter.hpp"
-#include "version.hpp"
 
-#define ALGO_VERSION 4
 
 using namespace toy_project;
 
@@ -98,10 +97,6 @@ run_experiment(Dataset& dataset, Dataset& queries,
 }
 
 int main(int argc, char **argv) {
-//   std::cout << "Version for avx512 " << version<dot_product_i16_avx512>() << std::endl;
-//   std::cout << "Version for avx2 " << version<dot_product_i16_avx2>() << std::endl;
-
-  return 0;
   std::cout << "Running with code version " << GIT_REV << std::endl;
 
   // Bring the database schema to the most up to date version
@@ -167,6 +162,7 @@ int main(int argc, char **argv) {
   if (filter) {
       run_identifier << "filter=true;recall=" << recall << ";";
   }
+  Version version = get_version(filter, method, storage);
 
   // Datasets are loaded _by name_, not by filename!
   // It works as follows: the C++ calls Python and reads its
@@ -179,7 +175,7 @@ int main(int argc, char **argv) {
   // With this information, C++ reads the dataset from HDF5.
   auto datasets = load(dataset_name, seed);
   if (!force && contains_result(dataset_name, 1, "bruteforce", 
-                                ALGO_VERSION, seed, run_identifier.str())) {
+                                version, seed, run_identifier.str())) {
       std::cout << "Experiment already carried out -- skipping" << std::endl;
       return 0;
   }
@@ -221,7 +217,7 @@ int main(int argc, char **argv) {
       return 2;
   }
 
-  record_result(dataset_name, 1, "bruteforce", ALGO_VERSION, 
+  record_result(dataset_name, 1, "bruteforce", version,
     run_identifier.str(), experiment_fn, seed, res.first, res.second);
 
   return 0;
