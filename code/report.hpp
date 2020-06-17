@@ -136,6 +136,26 @@ int db_setup() {
     bump.exec();
   }
   case 5: {
+    // The following view takes the maximum component version for each combination
+    // of components, to be used for filtering in the `recent_results` view.
+    sqlite::Statement create_view_versions(conn,
+      "CREATE VIEW recent_versions AS SELECT components, "
+      "    MAX(algorithm_version) AS algorithm_version, MAX(version_brute_force) AS version_brute_force, MAX(version_filter) AS version_filter, "
+      "    MAX(version_storage) AS version_storage, MAX(version_distance) as version_distance "
+      "FROM results_raw "
+      "GROUP BY components;");
+    create_view_versions.exec();
+
+    // Filters results keeping only the ones using the most up to date component.
+    // Begin a natural join, it uses all the columns from the `recent_versions` view.
+    sqlite::Statement create_view_recent_results(conn,
+      "CREATE VIEW recent_results AS SELECT * FROM results NATURAL JOIN recent_versions;");
+    create_view_recent_results.exec();
+
+    sqlite::Statement bump(conn, "PRAGMA user_version = 5");
+    bump.exec();
+  }
+  case 6: {
     std::cout << "results database schema up to date" << std::endl;
     break;
   }

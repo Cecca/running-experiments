@@ -5,6 +5,9 @@
 // This is kept just for backwards compatibility
 #define ALGO_VERSION 4
 
+// The macros below define the current version of each component
+// of the software. Version numbers should only be *increased*
+// by one.
 #define VERSION_BRUTE_FORCE                1
 #define VERSION_FILTER                     1
 
