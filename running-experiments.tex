@@ -88,12 +88,14 @@ often menial work.
 all past results are kept and are easily accessible, since many times
 we ask ourselves "I seem to remember that once we got that result".
 This is a separate issue from reproducibility, it comes before that.}
+\matodo{This might be fixed now?}
 \cetodo{We might want to outline a couple of scenarios: investigating
 the evolution of the results of some configuration (maybe detecting 
 regressions/bugs); debugging, thus finding the change that introduced a
 regression, for instance a drop in the recall or speed of the algorithm;
 retrieving the most up-to date result for each configuration to do the final
 analysis.}
+\matodo{This would be nice, but I doubt it fits the pagelimit. Maybe an appendix or on the website?}
 
 We don't advocate for any specific technology. Rather, we propose a workflow
 that can be implemented with a variety of tools that can be easily integrated
@@ -149,17 +151,17 @@ of the code base
 \begin{figure}[t]
   \centering
   \includegraphics[width=0.8\textwidth]{figs/experiment_scheme.png}
-  \caption{Overview of the different stages of an experimental challenges. Adapted from~\cite{DBLP:reference/algo/McGeoch08} by adding challenges to individual tasks and feedback loops.}
+  \caption{Overview of the different stages of an experimental study; adapted from~\cite{DBLP:reference/algo/McGeoch08} by adding challenges to individual tasks and feedback loops.}
   \label{fig:overview}
 \end{figure}
 We define the following challenges in the  evaluation of large-scale experiments:
 \begin{enumerate}
-  \item[(C1)] \textbf{Feedback Loops-by-Design.} The implementations and tools support the iterative nature of an experimental study.
+  \item[(C1)] \textbf{Feedback Loops-by-Design.} Implementations and tools support the iterative nature of an experimental study.
   \item[(C2)] \textbf{Economic Execution.} Exactly those experiments that change through code changes have to be re-run, but nothing else. 
   Moreover, only the changing parts of the experimental evaluation should be recomputed.
-  \item[(C3)] \textbf{Versioning.} The ability to go back in time and compare old results to more recent ones, finding regression or bugs. This requires an \emph{append-only} workflow.
-  \item[(C4)] \textbf{Machine independence.} Code and tools are designed in a way that allow them to run in a general setting.
-  \item[(C5)] \textbf{Reproducibility-by-Design.} We strive for an automatic workflow that processes an experimental setup into resulting measurements used for evaluating the experiment. Results to be included into a publication should not require manual work to transform these measurements into tables and plots.
+  \item[(C3)] \textbf{Versioning.} The ability to go back in time and compare old results to more recent ones, finding regressions or bugs. This requires an \emph{append-only} workflow.
+  \item[(C4)] \textbf{Machine Independence.} Code and tools are designed in a way that allow them to run in a general setting.
+  \item[(C5)] \textbf{Reproducibility-by-Design.} We strive for an automatic workflow that processes an experimental setup into measurements used for evaluating the experiment. Results to be included into a publication should not require manual work to transform these measurements into tables and plots.
 \end{enumerate}
 %
 We will detail these challenges in the following. 
@@ -195,14 +197,14 @@ obsolete results from the analysis, undermining the confidence in the soundness
 of the whole analysis.
 The situation worsens in the rushed final days preceding a submission:
 some last minute changes are made, there is no time to re-run all the experiments,
-the possibility of erroneously mixing results is very concrete. Additionally, reviewers will often demand running a new set of experiments, reporting on some other quality measures, or experimentation using different computer architectures (C2, C3, C4). \emph{Reproducibility-By-Design} (C5) requires that such wishes can be accomodated since the whole process from starting at an experimental design to a published table or figure is automated.
+the possibility of erroneously mixing results is very concrete. Additionally, reviewers will often demand running a new set of experiments, reporting on some other quality measures, or experimentation using different computer architectures (C2, C3, C4). \emph{Reproducibility-By-Design} (C5) requires that such wishes can be accommodated since the whole process from starting at an experimental design to a published table or figure is automated.
 
 As for the analysis itself, it is usually executed on a machine different from the
 experimental code, using a different programming language (C4).
 The input of the analysis is the set of results produced by the experimental suite,
 which is usually quite large due to the fact that many parameter combinations
 need to be evaluated.
-While the analysis code may not need the computational resourced of the 
+While the analysis code may not need the computational resources of the 
 experimental code, it still needs to execute reasonably fast, in order to be able
 to examine the results interactively.
 This implies that the results produced by the experiments need to be 
@@ -216,28 +218,27 @@ machines, and efficient to access (C2, C4).
 
 As our toy project, we engineer a nearest neighbor search algorithm that just carries out a linear scan over the dataset. 
 Formally, we are given a dataset $S \subset \mathbb{R}^d$ of $n$ points in a $d$-dimensional space with a distance measure $\text{dist}\colon \mathbb{R}^d \times \mathbb{R}^d \rightarrow \mathbb{R}$, such that given a query $q \in \mathbb{R}^d$ we want to return a point $p \in S$ that minimizes dist$(p', q)$ over all $p' \in S$.
-
 Solving this problem via a linear scan is a straight-forward exercise in an introduction to programming class: Compare all points $p' \in S$ one by one to $q$, and keep track of the point that is closest to $q$. This results in a running time $O(nd)$ for a single query.
 
-To make this problem more interesting (and introduce more parameters to experiment on), we consider engineering choices to speed up such a linear scan if the distance measure is the inner product $\text{dist}_{\text{IP}}(p,q) = \sum_{1 \leq i \leq d} x_i y_i$, which is analogous to cosine similarity on unit vectors. For the purpose of this project, we consider (i) input representation, (ii) parallelization, and (iii) saving distance computations as factors.
+To make this problem more interesting (and introduce more parameters to experiment on), we consider engineering choices to speed up such a linear scan if the distance measure is the inner product $\text{dist}_{\text{IP}}(p,q) = \sum_{1 \leq i \leq d} x_i y_i$, which is analogous to cosine similarity on unit vectors. For the purpose of this project, we consider (i) input representation, (ii) parallelization, and (iii) saving distance computations as factors of the experiment.
 
 \paragraph{Input representation.}
-A vector in $\mathbb{R}^d$ is traditionally represented as $d$ 64-bit floating point values (\texttt{double}). Other engineering choices are 32-bit float (\texttt{float}, or going as far as considering 16-bit representations. Since we guarantee $0 \leq x_i \leq 1$ for normalized vecors, we can use a 16-bit representations of rounded value $\lceil x_i \cdot 256 \rceil / 256$ (which could of course affect the accuracy of the result.)
+A vector in $\mathbb{R}^d$ is traditionally represented as $d$ 64-bit floating point values (\texttt{double}). Other engineering choices are 32-bit floating point (\texttt{float}), or going as far as considering 16-bit representations. Since we guarantee $0 \leq x_i \leq 1$ for normalized vectors, we can use a 16-bit representations of rounded value $\lceil x_i \cdot 256 \rceil / 256$ (which could of course affect the accuracy of the result.)
 
 \paragraph{Parallelization.}
 Naïvely, the CPU has to carry out $d$ multiplications and $d-1$ additions to compute the distance of two vectors.
-However, we notice that the structure is inherently parallel because the multiplications do not have data dependencies, which is ideal setup for using so-called SIMD instructions (single instruction multiple data). 
+However, we notice that the structure is inherently parallel because the multiplications do not have data dependencies, which is an ideal setup for using so-called SIMD instructions (single instruction multiple data). 
 In this way, we can split up each vector into blocks of size $B$, and carry out $d/B$ parallel multiplications, $d/B$ parallel additions to aggregate terms in a register of size $B$, and one horizontal sum. 
-Depending on the CPU architecture used in the experiment, $B$ is usually 128, 256, or---very recently---512 bits. Moreover, the choice of representing a single vector in $\mathbb{R}^d$ ranges gives a range of possibilities, using 32- or 64-bit floats, or use custom 16-bit representations.
+Depending on the CPU architecture used in the experiment, $B$ is usually 128, 256, or---very recently---512 bits.
 
 \paragraph{Saving Distance Computations.} Computing the distance 
-between two vectors is certainely the most expensive operation in our linear scan. Hence, if we could decide for a data point $p'$ that it probably is not the nearest neighbor looking could increase the performance of our linear scan. We include experiments with a 64-bit sketch using SimHash with probabilistic quality guarantees in our experiments. We review the approach in more detail in Appendix~\ref{app:sketches}.
+between two vectors is certainly the most expensive operation in our linear scan. Hence, if we could decide for a data point $p'$ that it probably is not the nearest neighbor faster than carrying out a distance computation could increase the performance of our linear scan. We include experiments with a 64-bit sketch using SimHash with probabilistic quality guarantees in our experiments. We review the approach in more detail in Appendix~\ref{app:sketches}.
 
 \medskip
 
-We consider this toy project representable for an experimentation task in a similarity search setting. An individual run is characterized by many different algorithms, there are feedback loops for the engeering choices, one has to handle datasets and their workloads, one has to measure certain attributes of the run, and so on. The experiment has to be carried out on different machines because of the hardware dependencies, which might mean to rent cloud instances to carry out measurements on recent hardware with $B = 512$ bit AVX512 support.
-
-\matodo{Add discussion how challenges relate to this toy project.}
+We consider this toy project representable for an experimentation task in a similarity search setting. 
+The different choices of input representation, parallelization, and distance filter methods provides an evolutionary setting in which we start with a standard linear scan and add features to the code base one by one. From a single measurement of running time, we quickly end up focusing on the quality of the achieved result when using a low-precision input representation.
+The experiment has to be carried out on different machines because of the hardware dependencies, which might mean to rent cloud instances to carry out measurements on recent hardware with $B = 512$ bit AVX512 support. 
 
 Our code is provided at \url{TODO}. For the scope of this paper, we consider the \emph{support code} that takes care of handling the setup as the main contribution.  
 
@@ -250,7 +251,7 @@ These dimensions are summarized in Figure~\ref{fig:discussion}.
 In the following, each dimension will be introduced with general
 guidelines and a discussion of our actual solution. 
 
-\begin{figure}
+\begin{figure}[t]
   \includegraphics[width=\textwidth]{figs/discussion_points.png}
   \caption{Dimensions for running large-scale experimental evaluations.}
   \label{fig:discussion}
@@ -274,9 +275,10 @@ guidelines and a discussion of our actual solution.
 \item Datasets should be annotated with meta-data necessary in the evaluation, 
   such as workloads and the related ground truth answers.
 \item To ease debugging, a small dataset of random data that can be created in a few
-  seconds should also be included.
+  seconds should also be included. This dataset can be run via Continuous Integration (CI), and results on it can be stored to enable regression testing. 
 \end{itemize}
-
+%
+In our code, the main C++ code calls a Python script ({\tt datasets.py}) that takes care of preprocessing datasets in a well-defined manner. It checks for the existence of a shared dataset (of the same version) and computes it locally if such a dataset is not available. It supports that creation of tiny random datasets that allows to run all parts of the workflow on actual data. The query set that is latter used for experimentation is created in this process as well, and data is stored as an {\tt HDF5} file for efficient processing in many different programming languages.
 
 \subsection{Manage the experimental configurations clearly}
 
@@ -296,19 +298,21 @@ guidelines and a discussion of our actual solution.
       the advantage of requiring very little setup.
   \end{itemize}
 \item All the aforementioned experimental files should be tracked with version 
-  control along with the code. Before running the experiments, any pending changes should
-  be committed.
-\item There should be a mechanism allowing to skip already-run configurations (see~\ref{sec:manage-results}).
-  This allows both to save time (challenge XXXX) without having to continuously edit
-  the configuration files to remove the configurations that don't need to be run.
+  control along with the code. Before running the experiments, any pending changes should be committed.
+\item There should be a mechanism allowing to skip already-run configurations.
+  This allows both to save time (C2) without having to continuously edit
+  the configuration files to remove the configurations that do not need to be run.
 \end{itemize}
+%
+We provide the example files that we used in Appendix~\ref{app:experiment-file}. While a direct experimental file written in Bash is straight-forward, the YAML structure gives a much more structured overview. The YAML file is run through an additional Python script that invokes the main implementation with the correct parameters. Using versioning and the result database (Subsection~\ref{sec:manage-experiments}) the code can decide whether an algorithm has to be rerun.
 
 \subsection{Infrastructure management}
 
-\paragraph{The code}
+\paragraph{Code infrastructure}
 
 Not just from the point of view of implementation, but maybe even more
 prominently from the point of view of usage. That is to say:
+\matodo{I'm not sure what this sentence is supposed to say.}
 
 \begin{itemize}
 \item Keep parameters at the bare minimum. If a parameter never changes across
@@ -320,14 +324,19 @@ prominently from the point of view of usage. That is to say:
   that can be handled just in release mode.
 \end{itemize}
 
-\paragraph{Provide a Well-Defined Environment}
+\paragraph{Environment Infrastructure}
 
-Your implementation will depend on many different environmental settings such as the libraries needed to run your code and the correct versions of compilers/libraries/OS that you intended to use:
+Your implementation will depend on many different environmental settings such as the libraries needed to run your code and the correct versions of compilers/libraries/OS that you intended to use. To allow a machine independent workflow, this means that your code has to run a pre-defined setting. Usually, this will translate into:
 \begin{itemize}
-  \item Provide a containerized development environment (nowadays included in programming IDE such as \url{https://code.visualstudio.com/docs/remote/containers}.)
-  \item Consider different container formats for running experiments~\cite{arango2017performance}.
-  \item Use continuous integration to test all parts of the workflow
+  \item Providing a containerized development environment\footnote{Recently, such environments are included in programming IDE such as \url{https://code.visualstudio.com/docs/remote/containers}}.
+  \item Considering different container formats for running experiments~\cite{arango2017performance}.
+  \item Using continuous integration to test all parts of the workflow.
 \end{itemize}
+%
+Our code provides a {\tt Dockerfile} that installs a well-defined Linux environment and sets up the correct compilers and libraries. 
+Each component is run from the local system via a {\tt dockerrun} script that will run the intended process within the container. 
+The main program has a simple interface: it implements the linear scan, the logic for reading the dataset, and the logic to communicate with the database. 
+It will run the pre-defined workload and report the running time and the indices of the nearest neighbor for each query.
 
 \subsection{Version everything}
 
@@ -341,17 +350,19 @@ a project:
   \item The schemas of the database for reporting results (or the fields of 
     the CSV files, if we don't use a database)
   \item Datasets, for which the preprocessing might evolve in time in 
-    response to fixing bugs
+    response to fixing bugs, or to define different workloads
 \end{itemize}
 All these components can evolve independently from one another, even within each category
 (we can update just one of the many algorithms and datasets under consideration).
-These changes should be recorded, but we don't want to re-run all the experiments just because
-one dataset was updated. Rather, we would like to re-run only those experiments involving it.
-\cetodo{This is rather similar to \texttt{make}, so we keep re-inventing the wheel, 
-or the necessities are always the same.}
+%These changes should be recorded, but we don't want to re-run all the experiments just because
+%one dataset was updated. Rather, we would like to re-run only those experiments involving it.
+%\cetodo{This is rather similar to \texttt{make}, so we keep re-inventing the wheel, 
+%or the necessities are always the same.}
 For this purpose, using the git version of the code is not well suited to this, as it is
 shared between all the components.
 
+In our code, each dataset and database schema provides their own version number. Additionally, components of the implementation such as input representation type or SIMD definitions are versioned. This allows us to map each parameter set for the linear scan to a unique identifier. As an example, during continuous integration we found a bug that only affected the AVX2 inner product computation with floating point numbers. An update of the version number of this part of the code led to a re-run of all parameters that used that particular combination. Each measurement obtained is versioned with its \emph{git identifier}, the algorithm version in question, and the dataset version. 
+\matodo{Downside: Manual work that might be error-prone.}
 
 \subsection{Manage the experimental results thoughtfully}
 \label{sec:manage-experiments}
@@ -360,7 +371,7 @@ Some of the challenges we identified are related to the management of the result
 of the experiments themselves.
 Using a structured file format like CSV meets some of the requirements, like being
 easy to produce and use, and easily transferrable between machines.
-However, being a text-based format makes its parsing is very expensive, and
+However, being a text-based format translate into expensive parsing, and
 the entire dataset needs to be loaded in main memory at the beginning
 of the analysis, even when we are only interested in a subset of it.\footnote{
   In our experience, when using CSV files a good part of our workday was spent 
@@ -376,7 +387,7 @@ the rest of the project, as demonstrated in our case study's code.
 For simple projects, an embeddable database like SQLite\footnote{\url{https://sqlite.org}}
 meets all the requirements: the results are stored in a single file which can be easily moved
 between machines, and many languages used for the analysis (like Python and R) provide
-facilities to access it.
+facilities to access it. (We provide different analyses using these languages in our study.)
 For larger projects, where experimental code is executed on different machines, a database with
 a client-server architecture\footnote{Such as PostgreSQL: \url{https://www.postgresql.org}} 
 might be more suitable, as it removes the need of 
@@ -407,6 +418,9 @@ steered the direction of the project.
 
 \section{Review: 1-bit sketches via SimHash}
 \label{app:sketches}
+
+\section{Experimental Example: Bash vs. YAML}
+\label{app:experiment-file}
 
 \end{document}
 
