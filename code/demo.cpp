@@ -1,5 +1,4 @@
 #include <sstream>
-
 #include "report.hpp"
 #include "datasets.hpp"
 #include "toy_project/vector_storage.hpp"
@@ -7,6 +6,7 @@
 #include "toy_project/distance.hpp"
 #include "toy_project/unit_vector.hpp"
 #include "toy_project/filter.hpp"
+#include "version.hpp"
 
 #define ALGO_VERSION 4
 
@@ -98,6 +98,10 @@ run_experiment(Dataset& dataset, Dataset& queries,
 }
 
 int main(int argc, char **argv) {
+//   std::cout << "Version for avx512 " << version<dot_product_i16_avx512>() << std::endl;
+//   std::cout << "Version for avx2 " << version<dot_product_i16_avx2>() << std::endl;
+
+  return 0;
   std::cout << "Running with code version " << GIT_REV << std::endl;
 
   // Bring the database schema to the most up to date version
