@@ -243,47 +243,48 @@ guidelines and a discussion of our actual solution.
 \subsection{Manage the datasets and workloads efficiently}
 
 \begin{itemize}
-\item \emph{No manual downloading and preprocessing}. At the very minimum, you want a
-  script to download and preprocess your data for you
-\item In my experience, `bash` quickly becomes very tangled, and `python` is a mess
-  to set up if you have to move on a new machine. Embedding the preprocessing
-  (and downloading) code in the experiment's code is the best way to go. You
-  get a single development environment to set up, a single entry point for the
-  experiments (no need to run a script to preprocess and distribute data as a
-  separate step).
-\item There should be a command to list all available datasets, and remove the ones
-  that are no longer needed.
-\item Annotate datasets with meta-data necessary in the evaluation (such as workloads and `true' answers to workloads) 
-\item Must be possible to create all datasets locally, but those versions should be shared. Can be shared via public http/S3.
-\item Always have a small dataset of random data that can be created in a few seconds.
+\item Dataset download and preprocessing should be automated as much as possible,
+  ideally with a single script responsible to manage all the datasets.
+  This makes reproducibility easier, allows to share preprocessing steps between similar datasets,
+  makes it easy to relocate the experiments on a different machine, and makes all the
+  decisions about datasets explicit.
+  Furthermore, it enables the community to change the datasets to observe how these changes
+  are reflected in the experiments.
+\item Related to the above, it must be possible to create all datasets locally, 
+  but the preprocessed datasets should also be shared, for instance using plain 
+  \texttt{http} or a service such as \texttt{S3}.
+  This makes it easier for collaborators, reviewers, and the community to re-run the
+  experiments without incurring the set-up cost of the datasets.
+\item Datasets should be annotated with meta-data necessary in the evaluation, 
+  such as workloads and the related ground truth answers.
+\item To ease debugging, a small dataset of random data that can be created in a few
+  seconds should also be included.
 \end{itemize}
 
 
 \subsection{Manage the experimental configurations clearly}
 
 \begin{itemize}
-\item Never run experiments from the command line, keep that for testing.
-\item Have a file describing all the experiments that will go into the paper. This
-  can be:
+\item Never run experiments from the command line. Direct command line execution
+  should be limited to testing.
+\item Experiments should be described in one or more files. This makes it easier
+  to reproduce the entire experimental suite. There are several options, which we both 
+  demonstrate in the associated code:
   \begin{itemize}
-  \item A file in a declarative language such as YAML. The pros are that it is
-    declarative, the cons are that you have to implement the logic to use it
-    anyway.
-  \item A simple bash script might be a better option: loops are used to test
-      different combinations of parameters, and switch statements are used to
-      test experiment groups.
-  \item A third alternative is to make the code accept configuration file with all
-      the parameters to test. The problem is then that we need to implement the
-      logic to handle all these runs, which can be very cumbersome an is
-      ultimatly wasted work.
+    \item Files in a declarative language such as YAML listing all the combinations of
+    parameters to be tested. These files are then interpreted by a script that spawns
+    the appropriately configured experimental code. This approach has the advantage of
+    being declarative, and the disadvantage of requiring some additional software.
+    \item Shell scripts that directly invoke the experimental code using 
+      the appropriate parameters. This is a more procedural approach, which however has
+      the advantage of requiring very little setup.
   \end{itemize}
-\item All experimental files go into the VCS. 
-\item Allow to skip rerunning parameter configurations, so to avoid continuous
-  editing of the experimental files. Ideally, you should have a way for your
-  code to telle whether an experiment has already been run, giving the option
-  to skip runinng it or to "override" the result, actually just appending the
-  new result.
- \item Chronological ordering: Use YYMMDD-theme\_of\_experiment as file format.
+\item All the aforementioned experimental files should be tracked with version 
+  control along with the code. Before running the experiments, any pending changes should
+  be committed.
+\item There should be a mechanism allowing to skip already-run configurations (see~\ref{sec:manage-results}).
+  This allows both to save time (challenge XXXX) without having to continuously edit
+  the configuration files to remove the configurations that don't need to be run.
 \end{itemize}
 
 \subsection{Infrastructure management}
@@ -337,6 +338,7 @@ shared between all the components.
 
 
 \subsection{Manage the experimental results thoughtfully}
+\label{sec:manage-experiments}
 
 Some of the challenges we identified are related to the management of the results
 of the experiments themselves.
