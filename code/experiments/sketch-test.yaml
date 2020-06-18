@@ -5,7 +5,7 @@ environment:
 experiments:
     - name: baseline
       storage: ['float_aligned']
-      method: ['simple']
+      method: ['simple', 'avx2', 'avx512']
     - name: i16_alignment
       storage: ['i16_aligned']
       method: ['simple', 'avx2', 'avx512']
