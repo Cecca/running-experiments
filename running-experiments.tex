@@ -304,25 +304,7 @@ We provide the example files that we used in Appendix~\ref{app:experiment-file}.
 
 \subsection{Infrastructure management}
 
-\paragraph{Code infrastructure}
-
-Not just from the point of view of implementation, but maybe even more
-prominently from the point of view of usage. That is to say:
-\matodo{I'm not sure what this sentence is supposed to say.}
-
-\begin{itemize}
-\item Keep parameters at the bare minimum. If a parameter never changes across
-  experiments, then remove it from the tunable options. That is: keep the
-  interface minimal
-\item Use assertions everywhere, possibly active just during debug. This means that
-  you should have a test dataset that can run in a reasonable time in debug
-  mode. The problem is that often the problems arise when using large datasets
-  that can be handled just in release mode.
-\end{itemize}
-
-\paragraph{Environment Infrastructure}
-
-Your implementation will depend on many different environmental settings such as the libraries needed to run your code and the correct versions of compilers/libraries/OS that you intended to use. To allow a machine independent workflow, this means that your code has to run a pre-defined setting. Usually, this will translate into:
+Any implementation will likely depend on many different environmental settings such as the libraries needed to run your code and the correct versions of compilers/libraries/OS that you intended to use. To allow a machine independent workflow, this means that your code has to run a pre-defined setting. Usually, this will translate into:
 \begin{itemize}
   \item Providing a containerized development environment\footnote{Recently, such environments are included in programming IDE such as \url{https://code.visualstudio.com/docs/remote/containers}}.
   \item Considering different container formats for running experiments~\cite{arango2017performance}.
@@ -402,8 +384,6 @@ the most recent version of algorithms and datasets.
 We stress that with this approach all the historical information of the project is preserved,
 which is very important to debug the application or to reconstruct the reasons that
 steered the direction of the project.
-
-\subsection{Don't repeat yourself}
 
 \section{Conclusions}
 
