@@ -69,15 +69,15 @@ In fact, as also noted by Moret and Shapiro~\cite{DBLP:journals/jucs/MoretS01},
 the understanding required for an implementation may uncover features of the
 algorithms that would otherwise go unnoticed.
 Furthermore, the analysis of experimental results about algorithms can give
-insights about aspects that are not easily described by theoretical
+insights about aspects not easily described by theoretical
 models of computation~\cite{DBLP:journals/cacm/McGeoch07}.
-At the same time, this feedback-based process leads to the quick
-accumulation of obsolete data, referring to old versions of the
+At the same time, this feedback-based process leads to the
+accumulation of obsolete data, referring to old versions of
 algorithms and their implementations.
 Not mixing results from different versions of
-an algorithm (or implementation) is an obvious requirement, which
+an algorithm or implementation is an obvious requirement, which
 however requires some care in practice.
-In fact, oftentimes a study involves different algorithms and datasets,
+In fact, a study often involves different algorithms and datasets,
 each evolving at a different pace: weeks-old results might be up to date
 for one algorithm, and obsolete for another.
 
@@ -97,7 +97,7 @@ into existing setups. We demonstrate such a setup with a toy project that concer
 
 \section{Related work}
 
-Previous works focused mainly on two areas: the design of experiments,
+Previous work focused mainly on two areas: the design of experiments,
 and reproducible research.
 
 Moret and Shapiro~\cite{DBLP:journals/jucs/MoretS01} advocate for the
@@ -153,18 +153,18 @@ We define the following challenges in the  evaluation of large-scale experiments
   \item[(C1)] \textbf{Feedback Loops-by-Design.} Implementations and tools support the iterative nature of an experimental study.
   \item[(C2)] \textbf{Economic Execution.} Exactly those experiments that change through code changes have to be re-run, but nothing else. 
   Moreover, only the changing parts of the experimental evaluation should be recomputed.
-  \item[(C3)] \textbf{Versioning.} The ability to go back in time and compare old results to more recent ones, finding regressions or bugs. This requires an \emph{append-only} workflow.
+  \item[(C3)] \textbf{Versioning.} The ability to go back in time and compare old results to more recent ones, finding regressions or bugs; the workflow is \emph{append-only}.
   \item[(C4)] \textbf{Machine Independence.} Code and tools are designed in a way that allow them to run in a general setting.
   \item[(C5)] \textbf{Reproducibility-by-Design.} We strive for an automatic workflow that processes an experimental setup into measurements used for evaluating the experiment. Results to be included into a publication should not require manual work to transform these measurements into tables and plots.
 \end{enumerate}
 %
-We will detail these challenges in the following. 
-
+%We will detail these challenges in the following. 
+%
 Typically, an experimental evaluation spans several weeks, if not months. An overview of a typical experimental evaluation is given in Figure~\ref{fig:overview}. 
 During this time, the experiments being run have different meanings: early
-on, during the initial development, experiments are useful to find out the most
+on during initial development, experiments are useful to find out the most
 appropriate parameter ranges, find bugs, and check assumptions; later on,
-experiments are devoted to the collection of the results of the study.
+experiments collect the results of the study.
 This is not a process that proceeds linearly from start to finish. 
 Rather, the analysis of the results might prompt the modification of an algorithm
 or dataset, or the introduction of new algorithms and datasets into the study,
@@ -203,8 +203,7 @@ experimental code, it still needs to execute reasonably fast, in order to be abl
 to examine the results interactively.
 This implies that the results produced by the experiments need to be 
 stored in a convenient
-format that is at the same time easily manageable, convenient to transfer between
-machines, and efficient to access (C2, C4).
+format that is at the same time easily manageable, convenient to transfer, and efficient to access (C2, C4).
 
 
 
@@ -380,7 +379,7 @@ steered the direction of the project.
 
 \section{Conclusions}
 
-\section*{Acknowledgements} Many of the ideas of our toy project were originally developed by Michael Vesterli for PUFFINN~\cite{puffinn} in the context of a LSH-based $k$-NN algorithm.
+\paragraph*{Acknowledgements.} Many of the ideas of our toy project were originally developed by Michael Vesterli for PUFFINN~\cite{puffinn}.
 
 \bibliographystyle{alpha}
 \bibliography{references}
@@ -399,6 +398,7 @@ It works by choosing a random $d$-dimensional normal vector $a \sim \mathcal{N}(
 Assume we choose 64 independent SimHash functions to produce a 64-bit sketch. The number of differences between two vectors $x$ and $y$ is distributed as $\text{Bin}(64,\text{arccos}(xy)/\pi )$ and it is easy to derive thresholds $\tau$ for a failure probability $\delta > 0$ such that with probability at least $1-\delta$, the number of difference between $x$ and $y$ is at most $\tau$. (In the simplest case, we can just use standard Chernoff bounds that one such choice for $\tau$ is $64\text{arccos}(xy)/\pi  + \sqrt{192 \ln (1/\delta)\text{arccos}(xy)/\pi}$.)
 
 To find a nearest neighbor of a given point $q$ with probability at least $1-\delta$, we carry out a linear scan by first checking the 64-bit sketch of the current data point $p$ and the query point, and only if we cannot rule out that $p$ could be the nearest neighbor of $q$, we carry out the actual distance computation. The threshold $\tau$ is set based on the inner product of the current closest nearest point and the query point as above.
+
 
 \section{Evaluation of our Engineered Linear Scan}
 \label{app:linear:scan}
