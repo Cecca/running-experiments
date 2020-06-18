@@ -318,29 +318,20 @@ It will run the pre-defined workload and report the running time and the indices
 
 \subsection{Version everything}
 
-Keeping the source code under version control might not be sufficient, since
-source code revisions (in isolation) lack semantic meaning: you cannot tell
-if a version is more recent than another without looking at the VCS DAG.
-Furthermore, there are several components that may need versioning in
-a project:
-\begin{itemize}
-  \item Algorithms implementation
-  \item The schemas of the database for reporting results (or the fields of 
-    the CSV files, if we don't use a database)
-  \item Datasets, for which the preprocessing might evolve in time in 
-    response to fixing bugs, or to define different workloads
-\end{itemize}
-All these components can evolve independently from one another, even within each category
-(we can update just one of the many algorithms and datasets under consideration).
-%These changes should be recorded, but we don't want to re-run all the experiments just because
-%one dataset was updated. Rather, we would like to re-run only those experiments involving it.
-%\cetodo{This is rather similar to \texttt{make}, so we keep re-inventing the wheel, 
-%or the necessities are always the same.}
-For this purpose, using the git version of the code is not well suited to this, as it is
-shared between all the components.
+To address challenges (C2) and (C3), version control systems might not be sufficient,
+since source code revisions lack both a semantic meaning and a total order.
+Furthermore, different components of a project might 
+evolve independently, thus
+needing independent versioning to address challenge (C2).
+Therefore, we suggest to keep track of the versions of individual components of the project,
+including datasets, algorithms, and database schemas, alongside the versioning provided
+by the version control system.
 
-In our code, each dataset and database schema provides their own version number. Additionally, components of the implementation such as input representation type or SIMD definitions are versioned. This allows us to map each parameter set for the linear scan to a unique identifier. As an example, during continuous integration we found a bug that only affected the AVX2 inner product computation with floating point numbers. An update of the version number of this part of the code led to a re-run of all parameters that used that particular combination. Each measurement obtained is versioned with its \emph{git identifier}, the algorithm version in question, and the dataset version. 
+In our code, each dataset and database schema provides their own version number. Additionally, components of the implementation such as input representation type or SIMD definitions are versioned. This allows us to map each parameter set for the linear scan to a unique identifier. As an example, during continuous integration we found a bug that only affected the AVX2 inner product computation with floating point numbers. An update of the version number of this part of the code led to a re-run of all parameter configurations that used that particular combination. Each measurement obtained is versioned with its \emph{git identifier}, the algorithm version in question, and the dataset version. 
 \matodo{Downside: Manual work that might be error-prone.}
+\cetodo{A better approach might be to make every component a class (with
+distance functions turned into functors) and make every one of them implement 
+a `Version` template. I tried it but I find templates in C++ very unnerving :-) }
 
 \subsection{Manage the experimental results thoughtfully}
 \label{sec:manage-experiments}
