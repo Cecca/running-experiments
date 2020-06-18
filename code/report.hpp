@@ -112,6 +112,50 @@ int db_setup() {
     bump.exec();
   }
   case 4: {
+    sqlite::Statement add_column_components(conn, 
+            "ALTER TABLE results_raw ADD COLUMN components TEXT DEFAULT '' NOT NULL;");
+    add_column_components.exec();
+
+    sqlite::Statement add_column_version_brute_force(conn, 
+            "ALTER TABLE results_raw ADD COLUMN version_brute_force INT DEFAULT 0;");
+    add_column_version_brute_force.exec();
+
+    sqlite::Statement add_column_version_filter(conn, 
+            "ALTER TABLE results_raw ADD COLUMN version_filter INT DEFAULT 0;");
+    add_column_version_filter.exec();
+
+    sqlite::Statement add_column_version_distance(conn, 
+            "ALTER TABLE results_raw ADD COLUMN version_distance INT DEFAULT 0;");
+    add_column_version_distance.exec();
+
+    sqlite::Statement add_column_version_storage(conn, 
+            "ALTER TABLE results_raw ADD COLUMN version_storage INT DEFAULT 0;");
+    add_column_version_storage.exec();
+
+    sqlite::Statement bump(conn, "PRAGMA user_version = 4");
+    bump.exec();
+  }
+  case 5: {
+    // The following view takes the maximum component version for each combination
+    // of components, to be used for filtering in the `recent_results` view.
+    sqlite::Statement create_view_versions(conn,
+      "CREATE VIEW recent_versions AS SELECT components, "
+      "    MAX(algorithm_version) AS algorithm_version, MAX(version_brute_force) AS version_brute_force, MAX(version_filter) AS version_filter, "
+      "    MAX(version_storage) AS version_storage, MAX(version_distance) as version_distance "
+      "FROM results_raw "
+      "GROUP BY components;");
+    create_view_versions.exec();
+
+    // Filters results keeping only the ones using the most up to date component.
+    // Begin a natural join, it uses all the columns from the `recent_versions` view.
+    sqlite::Statement create_view_recent_results(conn,
+      "CREATE VIEW recent_results AS SELECT * FROM results NATURAL JOIN recent_versions;");
+    create_view_recent_results.exec();
+
+    sqlite::Statement bump(conn, "PRAGMA user_version = 5");
+    bump.exec();
+  }
+  case 6: {
     std::cout << "results database schema up to date" << std::endl;
     break;
   }
@@ -123,9 +167,16 @@ int db_setup() {
   return 0;
 }
 
-
+// Checks whether an experiment has already been run. The `Version` information
+// is used as follows. The `components` column reports which components are used
+// by the run (including the implementation of distance and the implementation
+// of storage): first we check against this column; if an experiment with the same
+// components has been run, we check the `version_*` columns, which report the
+// appropriate versions of the related component, with `0` meaning that the component
+// is not used.
 bool contains_result(std::string dataset, int dataset_version,
-                   std::string algorithm, int algorithm_version,
+                   std::string algorithm,
+                   Version version,
                    uint64_t seed, std::string parameters) {
   sqlite::Connection conn = db_connection();
   // We don't check for the GIT_REV, since a change in the git revision
@@ -139,13 +190,23 @@ bool contains_result(std::string dataset, int dataset_version,
         " dataset_version = :dataset_version AND "
         " algorithm = :algorithm AND "
         " algorithm_version = :algorithm_version AND "
+        " components = :components AND "
+        " version_brute_force = :version_brute_force AND "
+        " version_filter = :version_filter AND "
+        " version_distance = :version_distance AND "
+        " version_storage = :version_storage AND "
         " seed = :seed AND "
         " parameters = :parameters;");
   stmt.bind_text(":hostname", get_hostname());
   stmt.bind_text(":dataset", dataset);
   stmt.bind_int(":dataset_version", dataset_version);
   stmt.bind_text(":algorithm", algorithm);
-  stmt.bind_int(":algorithm_version", algorithm_version);
+  stmt.bind_int(":algorithm_version", version.algo_version);
+  stmt.bind_text(":components", version.components);
+  stmt.bind_int(":version_brute_force", version.brute_force);
+  stmt.bind_int(":version_filter", version.filter);
+  stmt.bind_int(":version_storage", version.storage);
+  stmt.bind_int(":version_distance", version.distance);
   stmt.bind_int64(":seed", seed);
   stmt.bind_text(":parameters", parameters);
   stmt.exec();
@@ -154,7 +215,8 @@ bool contains_result(std::string dataset, int dataset_version,
 }
 
 void record_result(std::string dataset, int dataset_version,
-                   std::string algorithm, int algorithm_version,
+                   std::string algorithm,
+                   Version version,
                    std::string parameters, std::string experiment_file, 
                    uint64_t seed, uint64_t running_time_ns,
                    std::vector<size_t> nearest_neighbors) {
@@ -163,7 +225,9 @@ void record_result(std::string dataset, int dataset_version,
   std::string date = datetime_now();
   std::stringstream to_hash_stream;
   to_hash_stream << date << hostname << dataset << dataset_version << algorithm
-                 << algorithm_version << parameters;
+                << version.components
+                << version.algo_version << version.brute_force << version.filter 
+                << version.storage << version.distance << parameters;
   std::string sha = sha256_string(to_hash_stream.str());
 
   sqlite::Connection conn = db_connection();
@@ -171,9 +235,11 @@ void record_result(std::string dataset, int dataset_version,
       conn,
       "INSERT INTO results_raw"
       "  (sha, git_rev, hostname, date, dataset, dataset_version, algorithm, algorithm_version, "
+      "   components, version_brute_force, version_filter, version_storage, version_distance, "
       "   experiment_file, seed, parameters, running_time_ns)"
       "VALUES (:sha, :git_rev, :hostname, :date, :dataset, :dataset_version, "
       "        :algorithm, :algorithm_version, "
+      "        :components, :version_brute_force, :version_filter, :version_storage, :version_distance, "
       "        :experiment_file, :seed, :parameters, :running_time_ns);");
 
   stmt.bind_text(":sha", sha);
@@ -183,7 +249,12 @@ void record_result(std::string dataset, int dataset_version,
   stmt.bind_text(":dataset", dataset);
   stmt.bind_int(":dataset_version", dataset_version);
   stmt.bind_text(":algorithm", algorithm);
-  stmt.bind_int(":algorithm_version", algorithm_version);
+  stmt.bind_int(":algorithm_version", version.algo_version);
+  stmt.bind_text(":components", version.components);
+  stmt.bind_int(":version_brute_force", version.brute_force);
+  stmt.bind_int(":version_filter", version.filter);
+  stmt.bind_int(":version_storage", version.storage);
+  stmt.bind_int(":version_distance", version.distance);
   stmt.bind_text(":experiment_file", experiment_file);
   stmt.bind_text(":parameters", parameters);
   stmt.bind_int64(":seed", seed);

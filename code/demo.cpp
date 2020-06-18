@@ -1,5 +1,5 @@
 #include <sstream>
-
+#include "version.hpp"
 #include "report.hpp"
 #include "datasets.hpp"
 #include "toy_project/vector_storage.hpp"
@@ -8,7 +8,6 @@
 #include "toy_project/unit_vector.hpp"
 #include "toy_project/filter.hpp"
 
-#define ALGO_VERSION 4
 
 using namespace toy_project;
 
@@ -163,6 +162,15 @@ int main(int argc, char **argv) {
   if (filter) {
       run_identifier << "filter=true;recall=" << recall << ";";
   }
+  Version version = get_version(filter, method, storage);
+  std::cout 
+    << "Version information"
+    << "\n  components: " << version.components
+    << "\n  brute_force: " << version.brute_force
+    << "\n  filter: " << version.filter
+    << "\n  storage: " << version.storage
+    << "\n  distance: " << version.distance
+    << std::endl;
 
   // Datasets are loaded _by name_, not by filename!
   // It works as follows: the C++ calls Python and reads its
@@ -175,7 +183,7 @@ int main(int argc, char **argv) {
   // With this information, C++ reads the dataset from HDF5.
   auto datasets = load(dataset_name, seed);
   if (!force && contains_result(dataset_name, 1, "bruteforce", 
-                                ALGO_VERSION, seed, run_identifier.str())) {
+                                version, seed, run_identifier.str())) {
       std::cout << "Experiment already carried out -- skipping" << std::endl;
       return 0;
   }
@@ -217,7 +225,7 @@ int main(int argc, char **argv) {
       return 2;
   }
 
-  record_result(dataset_name, 1, "bruteforce", ALGO_VERSION, 
+  record_result(dataset_name, 1, "bruteforce", version,
     run_identifier.str(), experiment_fn, seed, res.first, res.second);
 
   return 0;

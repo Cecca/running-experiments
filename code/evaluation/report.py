@@ -5,12 +5,12 @@ import numpy as np
 conn = sqlite3.connect('demo-db.sqlite')
 c = conn.cursor()
 
-datasets = [row[0] for row in c.execute('select distinct(dataset) from results;')]
+datasets = [row[0] for row in c.execute('select distinct(dataset) from recent_results;')]
 
 for ds in datasets:
     print(ds)
     plt.figure()
-    stmt = 'select hostname, algorithm, parameters, running_time_ns, recall from results where dataset=?'
+    stmt = 'select hostname, algorithm, parameters, running_time_ns, recall from recent_results where dataset=?'
     data = [row for row in c.execute(stmt, (ds,))]
     data.sort(key=lambda x: x[3])
     plt.barh(np.arange(len(data)), [x[3] / 1e9 for x in data])
