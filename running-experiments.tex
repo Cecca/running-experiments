@@ -12,6 +12,8 @@
 \newcommand{\matodo}[1]{\todo[inline, color=green!50]{#1}}
 \newcommand{\cetodo}[1]{\todo[inline, color=orange!50]{#1}}
 
+\newcommand{\myparagraph}[1]{\noindent \textbf{#1}}
+
 \begin{document}
 \title{Running experiments with confidence and sanity}
 %
@@ -20,8 +22,10 @@
 % an abbreviated paper title here
 %
 \author{
-  Martin Aumüller\inst{1}\orcidID{0000-0002-7212-6476} \and
-  Matteo Ceccarello\inst{2}\orcidID{0000-0003-2783-0218}}
+  Martin Aumüller\inst{1}%\orcidID{0000-0002-7212-6476} 
+  \and
+  Matteo Ceccarello\inst{2}%\orcidID{0000-0003-2783-0218}
+  }
 %
 \authorrunning{M. Aumüller and M. Ceccarello}
 % First names are abbreviated in the running head.
@@ -47,7 +51,8 @@ mishaps.
 We conclude by proposing a workflow, which can be implemented using several
 tools, that allows to analyze experimental data with confidence.
 
-\keywords{Experimental algorithmics; Experimental analysis; data analysis}
+\keywords{Experimental algorithmics; Experimental analysis%; data analysis
+}
 \end{abstract}
 
 \section{Introduction}
@@ -220,24 +225,28 @@ As our toy project, we engineer a nearest neighbor search algorithm that just ca
 Formally, we are given a dataset $S \subset \mathbb{R}^d$ of $n$ points in a $d$-dimensional space with a distance measure $\text{dist}\colon \mathbb{R}^d \times \mathbb{R}^d \rightarrow \mathbb{R}$, such that given a query $q \in \mathbb{R}^d$ we want to return a point $p \in S$ that minimizes dist$(p', q)$ over all $p' \in S$.
 Solving this problem via a linear scan is a straight-forward exercise in an introduction to programming class: Compare all points $p' \in S$ one by one to $q$, and keep track of the point that is closest to $q$. This results in a running time $O(nd)$ for a single query.
 
-To make this problem more interesting (and introduce more parameters to experiment on), we consider engineering choices to speed up such a linear scan if the distance measure is the inner product $\text{dist}_{\text{IP}}(p,q) = \sum_{1 \leq i \leq d} x_i y_i$, which is analogous to cosine similarity on unit vectors. For the purpose of this project, we consider (i) input representation, (ii) parallelization, and (iii) saving distance computations as factors of the experiment.
+To make this problem more interesting, we consider engineering choices to speed up a linear scan under inner product similarity $\text{dist}_{\text{IP}}(p,q) = \sum_{1 \leq i \leq d} x_i y_i$, which is analogous to cosine similarity on unit vectors. 
+For the purpose of this project, we consider (i) input representation, (ii) parallelization, and (iii) saving distance computations as factors of the experiment.
 
-\paragraph{Input representation.}
-A vector in $\mathbb{R}^d$ is traditionally represented as $d$ 64-bit floating point values (\texttt{double}). Other engineering choices are 32-bit floating point (\texttt{float}), or going as far as considering 16-bit representations. Since we guarantee $0 \leq x_i \leq 1$ for normalized vectors, we can use a 16-bit representations of rounded value $\lceil x_i \cdot 256 \rceil / 256$ (which could of course affect the accuracy of the result.)
+\myparagraph{Input representation.}
+A vector in $\mathbb{R}^d$ is traditionally represented as $d$ 64-bit floating point values (\texttt{double}) or 32-bit floating point (\texttt{float}). Since we guarantee $0 \leq x_i \leq 1$ for normalized vectors, we also consider a 16-bit representations of the value $\lceil x_i \cdot 2^{16} \rceil / 2^{16}$ (which could of course affect the accuracy of the result.)
 
-\paragraph{Parallelization.}
+\myparagraph{Parallelization.}
 Naïvely, the CPU has to carry out $d$ multiplications and $d-1$ additions to compute the distance of two vectors.
-However, we notice that the structure is inherently parallel because the multiplications do not have data dependencies, which is an ideal setup for using so-called SIMD instructions (single instruction multiple data). 
-In this way, we can split up each vector into blocks of size $B$, and carry out $d/B$ parallel multiplications, $d/B$ parallel additions to aggregate terms in a register of size $B$, and one horizontal sum. 
+However, we notice that the structure is inherently parallel because the multiplications are data independent. This is an ideal setup for using so-called SIMD instructions (single instruction multiple data). 
+We split up each vector into blocks of size $B$, and carry out $d/B$ parallel multiplications, $d/B$ parallel additions to aggregate terms in a register of size $B$, and one horizontal sum. 
 Depending on the CPU architecture used in the experiment, $B$ is usually 128, 256, or---very recently---512 bits.
 
-\paragraph{Saving Distance Computations.} Computing the distance 
-between two vectors is certainly the most expensive operation in our linear scan. Hence, if we could decide for a data point $p'$ that it probably is not the nearest neighbor faster than carrying out a distance computation could increase the performance of our linear scan. We include experiments with a 64-bit sketch using SimHash with probabilistic quality guarantees in our experiments. We review the approach in more detail in Appendix~\ref{app:sketches}.
+\myparagraph{Saving Distance Computations.} Computing the distance 
+between two vectors is certainly the most expensive operation in our linear scan. 
+Hence, if we could decide for a data point $p'$ that it probably is not the nearest neighbor faster than carrying out a distance computation could increase the performance of our linear scan. 
+We include experiments with a 64-bit sketch using SimHash with probabilistic quality guarantees in our experiments (see Appendix~\ref{app:sketches}).
 
 \medskip
 
 We consider this toy project representable for an experimentation task in a similarity search setting. 
-The different choices of input representation, parallelization, and distance filter methods provides an evolutionary setting in which we start with a standard linear scan and add features to the code base one by one. From a single measurement of running time, we quickly end up focusing on the quality of the achieved result when using a low-precision input representation.
+The different choices of input representation, parallelization, and distance filter methods provide an evolutionary setting in which we start with a standard linear scan and add features to the code base one by one. 
+From starting with a measurement of running time, we quickly end up focusing on the quality of the achieved result when using a low-precision input representation, or analyzing the effectivity of the sketch by counting distance computations.
 The experiment has to be carried out on different machines because of the hardware dependencies, which might mean to rent cloud instances to carry out measurements on recent hardware with $B = 512$ bit AVX512 support. 
 
 Our code is provided at \url{TODO}. For the scope of this paper, we consider the \emph{support code} that takes care of handling the setup as the main contribution.  
@@ -251,7 +260,7 @@ These dimensions are summarized in Figure~\ref{fig:discussion}.
 In the following, each dimension will be introduced with general
 guidelines and a discussion of our actual solution. 
 
-\begin{figure}[t]
+\begin{figure}[t!]
   \includegraphics[width=\textwidth]{figs/discussion_points.png}
   \caption{Dimensions for running large-scale experimental evaluations.}
   \label{fig:discussion}
