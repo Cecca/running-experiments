@@ -110,6 +110,8 @@ namespace toy_project {
         __m512 res = _mm512_mul_ps(
             _mm512_loadu_ps(lhs),
             _mm512_loadu_ps(rhs));
+        lhs += VALUES_PER_VEC;
+        rhs += VALUES_PER_VEC;
         for (
             unsigned int i=VALUES_PER_VEC;
             i < dimensions;
@@ -139,6 +141,8 @@ namespace toy_project {
         __m256 res = _mm256_mul_ps(
             _mm256_loadu_ps(lhs),
             _mm256_loadu_ps(rhs));
+        lhs += VALUES_PER_VEC;
+        rhs += VALUES_PER_VEC;
         for (
             unsigned int i=VALUES_PER_VEC;
             i < dimensions;
@@ -172,6 +176,8 @@ namespace toy_project {
         __m256 res = _mm256_mul_ps(
             _mm256_loadu_ps(lhs),
             _mm256_loadu_ps(rhs));
+        lhs += VALUES_PER_VEC;
+        rhs += VALUES_PER_VEC;
         for (
             unsigned int i=VALUES_PER_VEC;
             i < dimensions;

@@ -14,7 +14,7 @@
 #define VERSION_DOT_PRODUCT_i16_avx2       1
 #define VERSION_DOT_PRODUCT_i16_avx512     1
 #define VERSION_DOT_PRODUCT_i16_simple     1
-#define VERSION_DOT_PRODUCT_float_avx2     1
+#define VERSION_DOT_PRODUCT_float_avx2     2
 #define VERSION_DOT_PRODUCT_float_avx512   1
 #define VERSION_DOT_PRODUCT_float_simple   1
 
