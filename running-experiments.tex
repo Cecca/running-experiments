@@ -8,6 +8,8 @@
 \usepackage{amsfonts}
 \usepackage{amsmath}
 
+\usepackage{microtype}
+
 
 \newcommand{\matodo}[1]{\todo[inline, color=green!50]{#1}}
 \newcommand{\cetodo}[1]{\todo[inline, color=orange!50]{#1}}
@@ -212,7 +214,7 @@ As our toy project, we engineer a nearest neighbor search algorithm that just ca
 Formally, we are given a dataset $S \subset \mathbb{R}^d$ of $n$ points in a $d$-dimensional space with a distance measure $\text{dist}\colon \mathbb{R}^d \times \mathbb{R}^d \rightarrow \mathbb{R}$, such that given a query $q \in \mathbb{R}^d$ we want to return a point $p \in S$ that minimizes dist$(p', q)$ over all $p' \in S$.
 Solving this problem via a linear scan is a straight-forward exercise in an introduction to programming class: Compare all points $p' \in S$ one by one to $q$, and keep track of the point that is closest to $q$. This results in a running time $O(nd)$ for a single query.
 
-To make this problem more interesting, we consider engineering choices to speed up a linear scan under inner product similarity $\text{dist}_{\text{IP}}(p,q) = \sum_{1 \leq i \leq d} x_i y_i$, which is analogous to cosine similarity on unit vectors. 
+To make this problem more interesting, we consider engineering choices to speed up a linear scan under inner product similarity $\text{dist}_{\text{IP}}(p,q) = \sum_{1 \leq i \leq d} x_i y_i$ on unit vectors, similar to Cosine similarity.
 For the purpose of this project, we consider (i) input representation, (ii) parallelization, and (iii) saving distance computations as factors of the experiment.
 
 \myparagraph{Input representation.}
@@ -236,7 +238,7 @@ The different choices of input representation, parallelization, and distance fil
 From starting with a measurement of running time, we quickly end up focusing on the quality of the achieved result when using a low-precision input representation, or analyzing the effectivity of the sketch by counting distance computations.
 The experiment has to be carried out on different machines because of the hardware dependencies, which might mean to rent cloud instances to carry out measurements on recent hardware with $B = 512$ bit AVX512 support. 
 
-Our code is provided at \url{TODO}. For the scope of this paper, we consider the \emph{support code} that takes care of handling the setup as the main contribution.  
+Our code is provided at \url{TODO}. For the scope of this paper, we consider the \emph{support code} that takes care of handling the setup as the main contribution. The evaluation of the this toy project is give in~\ref{app:linear:scan}.
 
 \section{Approaches to experimental evaluation}
 We now describe a workflow we developed to address the challenges outlined
@@ -378,21 +380,46 @@ steered the direction of the project.
 
 \section{Conclusions}
 
+\section*{Acknowledgements} Many of the ideas of our toy project were originally developed by Michael Vesterli for PUFFINN~\cite{puffinn} in the context of a LSH-based $k$-NN algorithm.
+
 \bibliographystyle{alpha}
 \bibliography{references}
 
 \appendix
 
-\section{Review: 1-bit sketches via SimHash}
-\label{app:sketches}
-
-
 \section{Experimental Example: Bash vs. YAML}
 \label{app:experiment-file}
+
+\section{Review: Linear scan using 1-bit sketches via SimHash}
+\label{app:sketches}
+
+Charikar described in~\cite{Charikar02} the well-known \emph{SimHash} scheme that maps a unit vector $x \in \mathbb{R}^d$ to $\{0,1\}$. 
+It works by choosing a random $d$-dimensional normal vector $a \sim \mathcal{N}(0, 1)^d$   and mapping $x$ to the indicator variable $[ax \geq 0]$. For two unit vectors $x,y$, the probability of mapping to the same bit is $1 - \text{arccos}(xy)/\pi$.
+
+Assume we choose 64 independent SimHash functions to produce a 64-bit sketch. The number of differences between two vectors $x$ and $y$ is distributed as $\text{Bin}(64,\text{arccos}(xy)/\pi )$ and it is easy to derive thresholds $\tau$ for a failure probability $\delta > 0$ such that with probability at least $1-\delta$, the number of difference between $x$ and $y$ is at most $\tau$. (In the simplest case, we can just use standard Chernoff bounds that one such choice for $\tau$ is $64\text{arccos}(xy)/\pi  + \sqrt{192 \ln (1/\delta)\text{arccos}(xy)/\pi}$.)
+
+To find a nearest neighbor of a given point $q$ with probability at least $1-\delta$, we carry out a linear scan by first checking the 64-bit sketch of the current data point $p$ and the query point, and only if we cannot rule out that $p$ could be the nearest neighbor of $q$, we carry out the actual distance computation. The threshold $\tau$ is set based on the inner product of the current closest nearest point and the query point as above.
 
 \section{Evaluation of our Engineered Linear Scan}
 \label{app:linear:scan}
 
+\myparagraph{Experimental setup.}
+
+\myparagraph{Evaluation.}
+
+Figure~\ref{plot:eval}(top) shows differences between a brute-force linear scan based on the input representation and the vectorization technique. 
+
+Figure~\ref{plot:eval}(middle) shows how throughput adapts to the recall level. 
+
+Figure~\ref{plot:eval}(bottom) relates filters using no and avx2 vectorization.
+
+\begin{figure}
+  \includegraphics[width=\textwidth]{figs/linearscan_no_filter.png}
+  \includegraphics[width=\textwidth]{figs/16bit_filter.png}
+  \includegraphics[width=\textwidth]{figs/avx2_16vs32bit.png}
+  \caption{Overview of our experimental results.}
+  \label{plot:eval}
+\end{figure}
 
 
 \end{document}
