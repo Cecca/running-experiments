@@ -339,20 +339,22 @@ a `Version` template. I tried it but I find templates in C++ very unnerving :-) 
 
 Some of the challenges we identified are related to the management of the results
 of the experiments themselves.
-Using a structured file format like CSV meets some of the requirements, like being
-easy to produce and use, and easily transferrable between machines.
-However, being a text-based format translate into expensive parsing, and
-the entire dataset needs to be loaded in main memory at the beginning
-of the analysis, even when we are only interested in a subset of it.\footnote{
-  In our experience, when using CSV files a good part of our workday was spent 
-  waiting for several gigabytes of text to be parsed into main memory.
-}
+Structured text file formats like CSV address challenge (C4), but are expensive to parse and require to be fully loaded in main memory prior to the analysis, even when only a subset is needed.
+% Using a structured file format like CSV meets some of the requirements, like being
+% easy to produce and use, and easily transferrable between machines.
+% However, being a text-based format translate into expensive parsing, and
+% the entire dataset needs to be loaded in main memory at the beginning
+% of the analysis, even when we are only interested in a subset of it.
+% \footnote{
+%   In our experience, when using CSV files a good part of our workday was spent 
+%   waiting for several gigabytes of text to be parsed into main memory.
+% }
 Moreover, it is hard to evolve the contents of these files together with 
 the project.
 
 Our advice is to use a database to store the results, since it presents data 
 conveniently indexed and removes the need for expensive parsing. Furthermore,
-using database migrations~\cite{citation-needed} the database can evolve along with
+using schema migrations the database can evolve along with
 the rest of the project, as demonstrated in our case study's code.
 For simple projects, an embeddable database like SQLite\footnote{\url{https://sqlite.org}}
 meets all the requirements: the results are stored in a single file which can be easily moved
@@ -369,8 +371,8 @@ As the project progresses, results accumulate. To track the
 \emph{provenance}~\cite{BunemanKW01} of each result, we suggest storing alongside
 the parameters also the configuration file (and its version) that generated the result.
 
-By means of database views~\cite{citation-needed} we can enforce that the analysis code
-has access only to the most recent results related to each algorithm/dataset: the associated code
+By means of database views we can enforce that the analysis code
+has access only to the most recent results related to each algorithm/dataset: our code
 demonstrates how to embed a query in the database so to present only the results related to 
 the most recent version of algorithms and datasets.
 We stress that with this approach all the historical information of the project is preserved,
