@@ -205,7 +205,8 @@ format that is at the same time easily manageable, convenient to transfer, and e
 
 \section{Case study: Engineering a Linear Scan}
 
-As our toy project, we engineer a nearest neighbor search algorithm that just carries out a linear scan over the dataset. 
+As our toy project, we engineer a nearest neighbor search algorithm that just carries out a linear scan over the dataset\footnote{We would like to thank Michael Vesterli for the many code optimizations that we are using, that he developed for PUFFINN~\cite{puffinn}.}.
+
 Formally, we are given a dataset $S \subset \mathbb{R}^d$ of $n$ points in a $d$-dimensional space with a distance measure $\text{dist}\colon \mathbb{R}^d \times \mathbb{R}^d \rightarrow \mathbb{R}$, such that given a query $q \in \mathbb{R}^d$ we want to return a point $p \in S$ that minimizes dist$(p', q)$ over all $p' \in S$.
 Solving this problem via a linear scan is a straight-forward exercise in an introduction to programming class: Compare all points $p' \in S$ one by one to $q$, and keep track of the point that is closest to $q$. This results in a running time $O(nd)$ for a single query.
 
@@ -358,10 +359,6 @@ has access only to the most recent results related to each algorithm/dataset (C3
 demonstrates how to embed a query in the database so to present only the results related to 
 the most recent version of algorithms and datasets.
 \end{itemize}
-
-\section{Conclusions}
-
-\paragraph*{Acknowledgements.} Many of the ideas of our toy project were originally developed by Michael Vesterli for PUFFINN~\cite{puffinn}.
 
 \bibliographystyle{splncs04}
 \bibliography{references}
