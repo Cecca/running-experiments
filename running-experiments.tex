@@ -378,23 +378,27 @@ It works by choosing a random $d$-dimensional normal vector $a \sim \mathcal{N}(
 
 Assume we choose 64 independent SimHash functions to produce a 64-bit sketch. The number of differences between two vectors $x$ and $y$ is distributed as $\text{Bin}(64,\text{arccos}(xy)/\pi )$ and it is easy to derive thresholds $\tau$ for a failure probability $\delta > 0$ such that with probability at least $1-\delta$, the number of difference between $x$ and $y$ is at most $\tau$. (In the simplest case, we can just use standard Chernoff bounds that one such choice for $\tau$ is $64\text{arccos}(xy)/\pi  + \sqrt{192 \ln (1/\delta)\text{arccos}(xy)/\pi}$.)
 
-To find a nearest neighbor of a given point $q$ with probability at least $1-\delta$, we carry out a linear scan by first checking the 64-bit sketch of the current data point $p$ and the query point, and only if we cannot rule out that $p$ could be the nearest neighbor of $q$, we carry out the actual distance computation. The threshold $\tau$ is set based on the inner product of the current closest nearest point and the query point as above.
+To find a nearest neighbor of a given point $q$ with probability at least $1-\delta$, we carry out a linear scan by first checking the 64-bit sketch of the current data point $p$ and the query point, and only if we cannot rule out that $p$ could be the nearest neighbor of $q$, we carry out the actual distance computation. The threshold $\tau$ is set based on the inner product of the current closest nearest point and the query point as above. We remark that this allows us to control the expected recall, since a failure probability of $\delta$ relates to an expected recall of $1-\delta$.
 
 
 \section{Evaluation of our Engineered Linear Scan}
 \label{app:linear:scan}
 
-\myparagraph{Experimental setup.} All experiments are carried out on a single core of a  ... running in a shared HPC cluster. We report on results for the \emph{Glove.27B.twitter} dataset containing roughly 1.2 million 100-dimensional data points. We chose 100 data points at random as query points and removed them from the dataset.
+\myparagraph{Experimental setup.} All experiments are carried out on a single core of a  ... running in a shared HPC cluster. We report on results for the \emph{Glove.27B.twitter} dataset (\url{https://nlp.stanford.edu/projects/glove/}) containing roughly 1.2 million 100-dimensional data points. We chose 100 data points at random as query points and removed them from the dataset.
 
-\myparagraph{Parameters.} We consider both 16-bit and 32-bit input representation, and inner product computation with a naive loop, an avx2 optimized loop, and an avx512 optimized loop. We use the SimHash filter described in Appendix~\ref{app:sketches} with failure probability $\delta \in \{0.001, 0.1, 0.2, 0.5, 0.7, 0.9, 0.99\}$. 
+\myparagraph{Parameters.} We consider both 16-bit and 32-bit input representation, and inner product computation with a naive loop, an avx2 optimized loop, and an avx512 optimized loop. We use the SimHash 64-bit sketch described in Appendix~\ref{app:sketches} with recall guarantess $r \in \{0.001, 0.1, 0.2, 0.5, 0.7, 0.9, 0.99\}$. 
 
-\myparagraph{Evaluation.}
+\myparagraph{Evaluation.} A selection of plots is presented in Figure~\ref{plot:eval}. 
 
-Figure~\ref{plot:eval}(top) shows differences between a brute-force linear scan based on the input representation and the vectorization technique. 
+The top plot relates different input and inner product computations for a linear scan without sketches to each other. A standard linear scan on the dataset result in a throughput of around 10 queries per second. It can be sped up to 35 queries per second using the 16-bit representation and avx2 instructions. In general, a naïve scan is slower in the 16-bit representation because there are internal conversions needed to carry out the multiplication. If we use vectorized instructions, there is a huge gain from using the 16-bit instead of the 32-bit representation. Somehow interestingly, using 256 bits registers is \emph{faster} than using the newer AVX 512 registers. This is true in both cases, but with different penalties between the two.
 
-Figure~\ref{plot:eval}(middle) shows how throughput adapts to the recall level. 
+In the middle plot, we fix a 16-bit representation and avx2-optimized inner product computation. 
+We relate different recall guarantees to the performance and neglect the actual quality of the resulting answers.
+As we can see, there is big increase in throughput possible by the use of these sketches. We achieve around 50 queries per second for recall guarantee of 0.99, 100 queries per second for 0.7, and close to 350 queries per second for a recall quality of 0.001 (i.e., no guarantee). 
 
-Figure~\ref{plot:eval}(bottom) relates filters using no and avx2 vectorization.
+Finally, the bottom plot shows the actual performance curves against the achieved recall for both input representation and simple inner product against avx2-optimized inner product. 
+First, we note that the 16-bit representation indeed shows a small performance loss: The recall average recall is only 0.98, which in our setting means that two true nearest neighbors were lost due to precision losses. 
+In general, 
 
 \begin{figure}
   \includegraphics[width=.8\textwidth]{figs/linearscan_no_filter.png}
@@ -403,6 +407,8 @@ Figure~\ref{plot:eval}(bottom) relates filters using no and avx2 vectorization.
   \caption{Overview of our experimental results.}
   \label{plot:eval}
 \end{figure}
+
+\myparagraph{Workflow discussion.} 
 
 
 \end{document}
