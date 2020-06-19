@@ -85,12 +85,12 @@ As we shall see, the literature is mainly concerned with the design
 and analysis of
 experiments
 and with reproducibility.
-In this paper, instead, we report on our experience with the day to day
+In this position paper, instead, we report on our experience with the day to day
 tasks that have to be carried out in between those three tasks, and
 the approaches we developed to tackle the perils and frustrations of this 
-often menial work.
+often menial work. \matodo{What is this paper? Position, Vision, Demonstration? :D}
 
-We don't advocate for any specific technology. Rather, we propose a workflow
+We do not advocate for any specific technology. Rather, we propose a workflow
 that can be implemented with a variety of tools that can be easily integrated
 into existing setups. We demonstrate such a setup with a toy project that concerns an efficient implementation of a brute-force nearest neighbor search.
 
@@ -103,10 +103,10 @@ McGeoch~\cite{DBLP:reference/algo/McGeoch08} gives several guidelines on how to
 design and carry out experimental analyses of algorithms.
 The book~\cite{DBLP:books/sp/2010BCPP} collects several contributions
 on the characterization and analysis of algorithm performance.
-Earlier, a Dagstuhl seminar has been devoted to the discussion of the
+Earlier, a Dagstuhl seminar was devoted to the discussion of the
 experimental evaluation of algorithms~\cite{DBLP:conf/dagstuhl/2000ea}.
-More recently, a structured approach to the design and evaluation
-of experiments has been discussed in~\cite{DBLP:series/ncs/Bartz-BeielsteinP14}.
+More recently, a structured approach to 
+experimental analysis was discussed in~\cite{DBLP:series/ncs/Bartz-BeielsteinP14}.
 %
 % Experimental studies can be influenced by contingent aspects
 % of the evaluation:
@@ -137,14 +137,15 @@ approach, where the description of the execution environment is part
 of the code base
 
 
-\section{Challenges in running large scale experimental evaluation}
+\section{Challenges in large scale experimental evaluation}
 \begin{figure}[t]
   \centering
   \includegraphics[width=0.8\textwidth]{figs/experiment_scheme.png}
-  \caption{Overview of the different stages of an experimental study; adapted from~\cite{DBLP:reference/algo/McGeoch08} by adding challenges to individual tasks and feedback loops.}
+  \caption{Overview of the different stages of an experimental study; adapted from~\cite{DBLP:reference/algo/McGeoch08}. % by adding challenges to individual tasks and feedback loops.
+  }
   \label{fig:overview}
 \end{figure}
-We define the following challenges in the  evaluation of large-scale experiments:
+We define the following challenges of running large-scale experiments:
 \begin{enumerate}
   \item[(C1)] \textbf{Feedback Loops-by-Design.} Implementations and tools support the iterative nature of an experimental study.
   \item[(C2)] \textbf{Economic Execution.} Exactly those experiments that change through code changes have to be re-run, but nothing else. 
@@ -245,7 +246,8 @@ In the following, each dimension will be introduced with general
 guidelines and a discussion of our actual solution. 
 
 \begin{figure}[t!]
-  \includegraphics[width=\textwidth]{figs/discussion_points.png}
+  \centering
+  \includegraphics[height=8em]{figs/discussion_points.png}
   \caption{Dimensions for running large-scale experimental evaluations.}
   \label{fig:discussion}
 \end{figure}
@@ -384,9 +386,13 @@ To find a nearest neighbor of a given point $q$ with probability at least $1-\de
 \section{Evaluation of our Engineered Linear Scan}
 \label{app:linear:scan}
 
-\myparagraph{Experimental setup.}
+\myparagraph{Experimental setup.} All experiments are carried out on a single core of a  ... running in a shared HPC cluster. We report on results for the \emph{Glove.27B.twitter} dataset containing roughly 1.2 million 100-dimensional data points. We chose 100 data points at random as query points and removed them from the dataset.
+
+\myparagraph{Parameters.} We consider both 16-bit and 32-bit input representation, and inner product computation with a naive loop, an avx2 optimized loop, and an avx512 optimized loop. We use the SimHash filter described in Appendix~\ref{app:sketches} with failure probabilities $\delta \in \{0.001, 0.1, 0.2, 0.5, 0.7, 0.9, 0.99\}$. 
 
 \myparagraph{Evaluation.}
+
+
 
 Figure~\ref{plot:eval}(top) shows differences between a brute-force linear scan based on the input representation and the vectorization technique. 
 
@@ -395,9 +401,9 @@ Figure~\ref{plot:eval}(middle) shows how throughput adapts to the recall level.
 Figure~\ref{plot:eval}(bottom) relates filters using no and avx2 vectorization.
 
 \begin{figure}
-  \includegraphics[width=\textwidth]{figs/linearscan_no_filter.png}
-  \includegraphics[width=\textwidth]{figs/16bit_filter.png}
-  \includegraphics[width=\textwidth]{figs/avx2_16vs32bit.png}
+  \includegraphics[width=.8\textwidth]{figs/linearscan_no_filter.png}
+  \includegraphics[width=.8\textwidth]{figs/16bit_filter.png}
+  \includegraphics[width=.8\textwidth]{figs/avx2_16vs32bit.png}
   \caption{Overview of our experimental results.}
   \label{plot:eval}
 \end{figure}
