@@ -1,0 +1,56 @@
+---
+title: "Engineering a linear scan"
+output: html_document
+---
+
+```{r setup, echo=FALSE, messages=FALSE}
+knitr::opts_chunk$set(echo=F)
+
+library(tidyverse)
+library(ggiraph)
+library(DBI)
+
+conn <- dbConnect(RSQLite::SQLite(), "../demo-db.sqlite")
+```
+
+```{r}
+results <- tbl(conn, "recent_results") %>%
+  collect() %>%
+  mutate(
+    method = str_extract(parameters, "simple|avx(51)?2"),
+    storage = str_extract(parameters, "i16_aligned|float_aligned"),
+    use_filter = str_detect(parameters, "filter=true"),
+    recall_wish = as.double(str_extract(parameters, "0\\.\\d+")),
+    qps = 100 / (running_time_ns / 1000000000)
+  )
+```
+
+## Recall
+
+```{r fig.width=10}
+results %>%
+  filter(use_filter) %>%
+  ggplot(aes(x=recall_wish, y=recall, color=storage)) +
+  geom_abline(intercept=0,slope=1) +
+  geom_point() +
+  facet_wrap(vars(method)) +
+  theme_bw()
+```
+
+## Queries per second
+
+```{r fig.widht=10}
+results %>%
+  filter(use_filter) %>%
+  mutate(conf = fct_reorder(interaction(method, storage), qps)) %>%
+  ggplot(aes(x=conf, y=qps, color=storage, shape=method)) +
+  geom_point() +
+  facet_wrap(vars(recall_wish)) +
+  coord_flip() +
+  ylim(0, NA) +
+  labs(x="Configuration",
+       y="Queries per second") +
+  theme_bw() +
+  theme(legend.position='top')
+```
+
