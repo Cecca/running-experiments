@@ -21,7 +21,6 @@ jobs:
     steps:
     # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
     - uses: actions/checkout@v2
-    - uses: xu-cheng/latex-action@v2
     - name: Test run
       run: |
         cd code && ./dockerrun make
@@ -33,3 +32,7 @@ jobs:
       with:
         name: recall
         path: code/random-xs-20-angular-recall.png
+    - uses: actions/upload-artifact@v2
+      with:
+        name: plots 
+        path: code/evaluation/evaluation.html
