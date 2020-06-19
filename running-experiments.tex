@@ -88,7 +88,7 @@ and with reproducibility.
 In this position paper, instead, we report on our experience with the day to day
 tasks that have to be carried out in between those three tasks, and
 the approaches we developed to tackle the perils and frustrations of this 
-often menial work. \matodo{What is this paper? Position, Vision, Demonstration? :D}
+often menial work. 
 
 We do not advocate for any specific technology. Rather, we propose a workflow
 that can be implemented with a variety of tools that can be easily integrated
@@ -386,11 +386,9 @@ To find a nearest neighbor of a given point $q$ with probability at least $1-\de
 
 \myparagraph{Experimental setup.} All experiments are carried out on a single core of a  ... running in a shared HPC cluster. We report on results for the \emph{Glove.27B.twitter} dataset containing roughly 1.2 million 100-dimensional data points. We chose 100 data points at random as query points and removed them from the dataset.
 
-\myparagraph{Parameters.} We consider both 16-bit and 32-bit input representation, and inner product computation with a naive loop, an avx2 optimized loop, and an avx512 optimized loop. We use the SimHash filter described in Appendix~\ref{app:sketches} with failure probabilities $\delta \in \{0.001, 0.1, 0.2, 0.5, 0.7, 0.9, 0.99\}$. 
+\myparagraph{Parameters.} We consider both 16-bit and 32-bit input representation, and inner product computation with a naive loop, an avx2 optimized loop, and an avx512 optimized loop. We use the SimHash filter described in Appendix~\ref{app:sketches} with failure probability $\delta \in \{0.001, 0.1, 0.2, 0.5, 0.7, 0.9, 0.99\}$. 
 
 \myparagraph{Evaluation.}
-
-
 
 Figure~\ref{plot:eval}(top) shows differences between a brute-force linear scan based on the input representation and the vectorization technique. 
 
