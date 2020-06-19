@@ -9,3 +9,8 @@ demo: demo.cpp *.hpp toy_project/*.hpp
 .PHONY: clean
 clean:
 	${RM} demo
+
+.PHONY: r-analysis
+r-analysis:
+	R -e 'rmarkdown::render("evaluation/evaluation.Rmd", output_file="evaluation-r.html")'
+

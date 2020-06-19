@@ -28,6 +28,7 @@ jobs:
         ./dockerrun python3 run_yaml.py ./demo experiments/ci.yaml
         ./dockerrun python3 evaluation/report.py
         ./dockerrun jupyter nbconvert --to html --execute evaluation/evaluation.ipynb 
+        ./dockerrun make r-analysis
     - uses: actions/upload-artifact@v2
       with:
         name: recall
@@ -35,4 +36,4 @@ jobs:
     - uses: actions/upload-artifact@v2
       with:
         name: plots 
-        path: evaluation/evaluation.html
+        path: evaluation/evaluation*.html
