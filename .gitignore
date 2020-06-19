@@ -289,3 +289,5 @@ TSWLatexianTemp*
 
 .vscode
 __latexindent_temp.tex
+demo-db.sqlite
+demo
