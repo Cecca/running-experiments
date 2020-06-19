@@ -59,16 +59,15 @@ tools, that allows to analyze experimental data with confidence.
 
 \section{Introduction}
 
-One of the peculiar aspects of \emph{experimental algorithmics}~\cite{DBLP:conf/dimacs/Moret99}
+One of the peculiar aspects of \emph{experimental algorithmics}~\cite{DBLP:journals/jucs/MoretS01}
 is that the object of the study (an algorithm and its implementation)
 is often crafted by the same people carrying out the analysis.
 This has the advantage that the insights obtained from preliminary
 investigations of early versions of an algorithm can be used to improve the
 algorithm itself.
-In fact, as also noted by Moret and Shapiro~\cite{DBLP:journals/jucs/MoretS01},
+In fact,
 the understanding required for an implementation may uncover features of the
-algorithms that would otherwise go unnoticed.
-Furthermore, the analysis of experimental results about algorithms can give
+algorithms that would otherwise go unnoticed~\cite{DBLP:journals/jucs/MoretS01}, giving
 insights about aspects not easily described by theoretical
 models of computation~\cite{DBLP:journals/cacm/McGeoch07}.
 At the same time, this feedback-based process leads to the
@@ -84,7 +83,7 @@ for one algorithm, and obsolete for another.
 
 As we shall see, the literature is mainly concerned with the design 
 and analysis of
-experiments, with the communication of the results,
+experiments
 and with reproducibility.
 In this paper, instead, we report on our experience with the day to day
 tasks that have to be carried out in between those three tasks, and
@@ -96,9 +95,6 @@ that can be implemented with a variety of tools that can be easily integrated
 into existing setups. We demonstrate such a setup with a toy project that concerns an efficient implementation of a brute-force nearest neighbor search.
 
 \section{Related work}
-
-Previous work focused mainly on two areas: the design of experiments,
-and reproducible research.
 
 Moret and Shapiro~\cite{DBLP:journals/jucs/MoretS01} advocate for the
 importance of complementing the theoretical analysis of algorithms
@@ -112,13 +108,13 @@ experimental evaluation of algorithms~\cite{DBLP:conf/dagstuhl/2000ea}.
 More recently, a structured approach to the design and evaluation
 of experiments has been discussed in~\cite{DBLP:series/ncs/Bartz-BeielsteinP14}.
 %
-Experimental studies can be influenced by contingent aspects
-of the evaluation:
-Bartz-Beielstein~\cite{DBLP:reference/sp/Bartz-Beielstein15} discusses
-the issue of generalizing the conclusions of experimental studies.
-%
-McGeoch and Moret~\cite{DBLP:journals/sigact/McGeochM99} and Sanders~\cite{DBLP:conf/dagstuhl/Sanders00}
-focus on the reporting of experimental results.
+% Experimental studies can be influenced by contingent aspects
+% of the evaluation:
+% Bartz-Beielstein~\cite{DBLP:reference/sp/Bartz-Beielstein15} discusses
+% the issue of generalizing the conclusions of experimental studies.
+% %
+% McGeoch and Moret~\cite{DBLP:journals/sigact/McGeochM99} and Sanders~\cite{DBLP:conf/dagstuhl/Sanders00}
+% focus on the reporting of experimental results.
 
 In recent years there has been a discussion about the lack of reproducibility
 of research findings in several areas, including 
