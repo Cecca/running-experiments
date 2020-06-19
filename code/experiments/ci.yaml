@@ -6,5 +6,10 @@ experiments:
     - name: baseline
       storage: ['float_aligned', 'i16_aligned']
       method: ['simple', 'avx2']
+    - name: sketches
+      storage: ['float_aligned', 'i16_aligned']
+      method: ['simple', 'avx2']
+      sketches: True
+      recall: [0.1, 0.2, 0.5, 0.7, 0.9]
 
 
