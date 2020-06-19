@@ -344,12 +344,12 @@ the project.
 conveniently indexed and removes the need for expensive parsing. 
 \item Use schema migrations the database can evolve along with
 the rest of the project (C3), as demonstrated in our case study's code.
-\item For simple projects, an embeddable database like SQLite\footnote{\url{https://sqlite.org}}
+\item For simple projects, an embeddable database like SQLite
 addresses challenge (C4): the results are stored in a single file which can be easily moved
 between machines, and many languages used for the analysis (like Python and R) provide
 facilities to access it, as shown in our code. 
 For larger projects, where experimental code is executed on different machines, a database with
-a client-server architecture\footnote{Such as PostgreSQL: \url{https://www.postgresql.org}} 
+a client-server architecture (such as PostgreSQL)
 might be more suitable.
 \item The experimental code can query the database to detect whether an experiment has already been run with the current version (C2).
 \item Track the \emph{provenance}~\cite{BunemanKW01} of each result, by storing alongside the parameters also the configuration file (and its version) that generated the result (C5).
