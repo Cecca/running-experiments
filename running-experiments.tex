@@ -260,7 +260,7 @@ guidelines and a discussion of our actual solution.
   decisions about datasets explicit.
   Furthermore, it enables the community to change the datasets to observe how these changes
   are reflected in the experiments.
-\item Related to the above, it must be possible to create all datasets locally, 
+\item It must be possible to create all datasets locally, 
   but the preprocessed datasets should also be shared, for instance using plain 
   \texttt{http} or a service such as \texttt{S3}.
   This makes it easier for collaborators, reviewers, and the community to re-run the
@@ -301,16 +301,17 @@ We provide the example files that we used in Appendix~\ref{app:experiment-file}.
 
 \subsection{Infrastructure management}
 
-Any implementation will likely depend on many different environmental settings such as the libraries needed to run your code and the correct versions of compilers/libraries/OS that you intended to use. To allow a machine independent workflow, this means that your code has to run a pre-defined setting. Usually, this will translate into:
+Any implementation will likely depend on many different environmental settings, such as the correct versions of libraries/compiler/OS.
+To allow a machine independent workflow, we suggest to:
 \begin{itemize}
-  \item Providing a containerized development environment\footnote{Recently, such environments are included in programming IDE such as \url{https://code.visualstudio.com/docs/remote/containers}}.
-  \item Considering different container formats for running experiments~\cite{arango2017performance}.
-  \item Using continuous integration to test all parts of the workflow.
+  \item Provide a containerized development environment\footnote{Recently, such environments are included in programming IDE such as \url{https://code.visualstudio.com/docs/remote/containers}}.
+  \item Consider different container formats for running experiments~\cite{arango2017performance}.
+  \item Use continuous integration to test all parts of the workflow.
 \end{itemize}
 %
 Our code provides a {\tt Dockerfile} that installs a well-defined Linux environment and sets up the correct compilers and libraries. 
 Each component is run from the local system via a {\tt dockerrun} script that will run the intended process within the container. 
-The main program has a simple interface: it implements the linear scan, the logic for reading the dataset, and the logic to communicate with the database. 
+The main program has a simple interface:\cetodo{This text now is unrelated to the above, since we removed the section about the code infrastructure. Shall we remove it?} it implements the linear scan, the logic for reading the dataset, and the logic to communicate with the database. 
 It will run the pre-defined workload and report the running time and the indices of the nearest neighbor for each query.
 
 \subsection{Version everything}
