@@ -9,6 +9,7 @@ knitr::opts_chunk$set(echo=F)
 library(tidyverse)
 library(ggiraph)
 library(DBI)
+library(ggiraph)
 
 conn <- dbConnect(RSQLite::SQLite(), "../demo-db.sqlite")
 ```
@@ -27,24 +28,30 @@ results <- tbl(conn, "recent_results") %>%
 
 ## Recall
 
+The diagonal line represents the minimum recall required to each configuration.
+
 ```{r fig.width=10}
-results %>%
+p_recall = results %>%
   filter(use_filter) %>%
-  ggplot(aes(x=recall_wish, y=recall, color=storage)) +
+  ggplot(aes(x=recall_wish, y=recall, color=storage,
+             tooltip=str_c("recall=", recall))) +
   geom_abline(intercept=0,slope=1) +
-  geom_point() +
+  geom_point_interactive() +
   facet_wrap(vars(method)) +
   theme_bw()
+
+girafe(code = print(p_recall))
 ```
 
 ## Queries per second
 
 ```{r fig.widht=10}
-results %>%
+p_qps <- results %>%
   filter(use_filter) %>%
   mutate(conf = fct_reorder(interaction(method, storage), qps)) %>%
-  ggplot(aes(x=conf, y=qps, color=storage, shape=method)) +
-  geom_point() +
+  ggplot(aes(x=conf, y=qps, color=storage, shape=method,
+             tooltip=str_c("qps=", qps))) +
+  geom_point_interactive() +
   facet_wrap(vars(recall_wish)) +
   coord_flip() +
   ylim(0, NA) +
@@ -52,5 +59,7 @@ results %>%
        y="Queries per second") +
   theme_bw() +
   theme(legend.position='top')
+
+girafe(code = print(p_qps))
 ```
 
