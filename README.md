@@ -16,7 +16,9 @@ A complete run of the experiments presented in the paper looks like this:
 
 ## Code Structure
 
-The toy project implementation is header-only and can be found in `toy_project/`. The code that presents a solution to the challenges presented in [the paper](https://itu.dk/people/maau/additional/running-experiments.pdf) can be found in the root directory. We quickly discuss how the code connects to our challenges, that we summarize as follows.
+The toy project implementation is header-only and can be found in `toy_project/`. The code that presents a solution to the challenges presented in [the paper](https://itu.dk/people/maau/additional/running-experiments.pdf) can be found in the root directory.  All experiment files can be found in `experiments/`. The analyis in the paper is based on [this yaml file](https://github.com/Cecca/running-experiments/blob/master/experiments/sketch-test.yaml). The figures in the paper are generated from within the jupyter notebook file `evaluation/evaluation.ipynb`.
+
+We quickly discuss how the code connects to our challenges, that we summarize as follows.
 
 ### Challenges
 
@@ -41,6 +43,9 @@ The bug in distance computations was clearly visible in the continuous integrati
 
 By providing a [small random dataset](https://github.com/Cecca/running-experiments/blob/master/datasets.py#L224-L238), we can run the whole analysis every single time through [CI](https://github.com/Cecca/running-experiments/blob/master/.github/workflows/code.yml). Carrying out the jupyter notebook writes all plots used in the paper to disk **(C5)**.
 
+## Short-comings
 
-
+1. While we propose to share the datasets, [our code](https://github.com/Cecca/running-experiments/blob/master/datasets.py) will create a local version if it is not present. The reason for doing is that that we do not store any additional data such as ground truth with the file. Checking for a shared version is similar to what is done in the [ann-benchmarks benchmarking tool](https://github.com/erikbern/ann-benchmarks/blob/master/ann_benchmarks/datasets.py#L26-L37).
+2. To enable better regression testing, unit tests should be carried out to check the correctness of the produced output. 
+3. While the CI approach provides a good snapshot of the current running time, it doesn't enable a historical overview over the performance of an algorithm.
 
