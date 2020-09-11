@@ -156,6 +156,30 @@ int db_setup() {
     bump.exec();
   }
   case 6: {
+    sqlite::Statement drop_view(conn, "DROP VIEW results;");
+    drop_view.exec();
+    sqlite::Statement drop_view2(conn, "DROP VIEW recent_results;");
+    drop_view2.exec();
+
+    sqlite::Statement create_view(conn,
+      "CREATE VIEW results_with_recall AS "
+      "SELECT * FROM results_raw NATURAL JOIN "
+      "   (SELECT sha, (1.0 - SUM(baseline_nn != nearest_neighbor_index) / (1.0 * COUNT(sha))) AS recall "
+      "        FROM baseline NATURAL JOIN (SELECT sha, dataset, dataset_version, query_index, nearest_neighbor_index "
+      "                                       FROM results_raw NATURAL JOIN nearest_neighbors) "
+      "        GROUP BY sha);"
+    );
+    create_view.exec();
+
+    sqlite::Statement create_view_recent_results(conn,
+      "CREATE VIEW results AS SELECT * FROM results_with_recall NATURAL JOIN recent_versions;");
+    create_view_recent_results.exec();
+
+    sqlite::Statement bump(conn, "PRAGMA user_version = 6");
+    bump.exec();
+    break;
+  }
+  case 7: {
     std::cout << "results database schema up to date" << std::endl;
     break;
   }
