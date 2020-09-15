@@ -6,7 +6,7 @@ import sys
 conn = sqlite3.connect('demo-db.sqlite')
 c = conn.cursor()
 
-datasets = [row[0] for row in c.execute('select distinct(dataset) from recent_results;')]
+datasets = [row[0] for row in c.execute('select distinct(dataset) from results;')]
 
 filter_strings = None
 
@@ -16,7 +16,7 @@ if len(sys.argv) > 1:
 for ds in datasets:
     print(ds)
     plt.figure()
-    stmt = 'select hostname, algorithm, parameters, running_time_ns, recall from recent_results where dataset=?' 
+    stmt = 'select hostname, algorithm, parameters, running_time_ns, recall from results where dataset=?' 
 
     if filter_strings:
         for s in filter_strings:
