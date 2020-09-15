@@ -15,7 +15,7 @@ conn <- dbConnect(RSQLite::SQLite(), "../demo-db.sqlite")
 ```
 
 ```{r}
-results <- tbl(conn, "recent_results") %>%
+results <- tbl(conn, "results") %>%
   collect() %>%
   mutate(
     method = str_extract(parameters, "simple|avx(51)?2"),
